@@ -49,17 +49,15 @@ export function AvatarUpload({ onUploadComplete, className }: AvatarUploadProps)
       }
 
       // Yeni avatarı yükle
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      await supabase.storage
         .from('avatars')
         .upload(fileName, file, {
           cacheControl: '3600',
           upsert: true
         })
 
-      if (uploadError) throw uploadError
-
       // Public URL oluştur
-      const { data: { publicUrl } } = supabase.storage
+      const { data: { publicUrl } } = await supabase.storage
         .from('avatars')
         .getPublicUrl(fileName)
 

@@ -2,7 +2,7 @@ import { createServerClient } from '@/lib/supabase/server-client'
 import { NextResponse } from 'next/server'
 
 // GET /api/profiles/notifications - Get notification settings
-export async function GET(request: Request) {
+export async function GET() {
   try {
     const supabase = createServerClient()
     

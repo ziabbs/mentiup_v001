@@ -2,7 +2,6 @@
 
 import { useProfile } from '@/contexts/profile-context'
 import { ProfileHeader } from '@/components/profile/profile-header'
-import { ProfileStats } from '@/components/profile/profile-stats'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Icons } from '@/components/ui/icons'
 import { CareerCheckupCard } from '@/components/profile/career-checkup-card'

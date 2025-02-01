@@ -20,7 +20,7 @@ export function AuthScreen({ onLinkedInAuth, onEmailAuth }: AuthScreenProps) {
       >
         <Card>
           <CardHeader>
-            <CardTitle>Lola'ya Hoş Geldiniz!</CardTitle>
+            <CardTitle>Lola&#39;ya Hoş Geldiniz!</CardTitle>
             <CardDescription>
               Devam etmek için bir yöntem seçin
             </CardDescription>

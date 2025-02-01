@@ -1,13 +1,9 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import type { Profile } from '@/types/profile'
+import * as React from 'react'
+import { Card } from '@/components/ui/card'
 
-interface ProfileStatsProps {
-  profile: Profile
-}
-
-export function ProfileStats({ profile }: ProfileStatsProps) {
+export function ProfileStats() {
   const stats = [
     {
       name: 'Mentorluk Seansları',
@@ -30,17 +26,17 @@ export function ProfileStats({ profile }: ProfileStatsProps) {
     <div className="grid gap-4 md:grid-cols-3 lg:gap-8">
       {stats.map((stat) => (
         <Card key={stat.name}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+          <div className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <div className="text-sm font-medium">
               {stat.name}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+            </div>
+          </div>
+          <div>
             <div className="text-2xl font-bold">{stat.value}</div>
             <p className="text-xs text-muted-foreground" aria-label={stat.label}>
               {stat.label}
             </p>
-          </CardContent>
+          </div>
         </Card>
       ))}
     </div>

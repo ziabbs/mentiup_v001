@@ -6,7 +6,6 @@ import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2 } from "lucide-react"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { SecuritySheet } from "./security-sheet"
@@ -20,12 +19,10 @@ export function LoginForm({ onForgotPassword }: LoginFormProps) {
   const router = useRouter()
   const supabase = createClientComponentClient()
   const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setIsLoading(true)
-    setError(null)
 
     const formData = new FormData(event.currentTarget)
     const email = formData.get("email") as string
@@ -44,7 +41,8 @@ export function LoginForm({ onForgotPassword }: LoginFormProps) {
       router.push("/onboarding/mentorship-type")
       router.refresh()
     } catch (error) {
-      setError("Giriş yapılamadı. Lütfen bilgilerinizi kontrol edin.")
+      setIsLoading(false)
+      throw error
     } finally {
       setIsLoading(false)
     }
@@ -77,12 +75,6 @@ export function LoginForm({ onForgotPassword }: LoginFormProps) {
               autoComplete="current-password"
             />
           </div>
-
-          {error && (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
 
           <Button
             type="submit"

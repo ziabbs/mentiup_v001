@@ -2,8 +2,6 @@
 
 import * as React from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { SecuritySheet } from "./security-sheet"
-import { TermsSheet } from "./terms-sheet"
 
 export function PolicyTabs() {
   return (

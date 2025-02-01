@@ -56,7 +56,7 @@ export function WelcomeScreen({ username, onContinue }: WelcomeScreenProps) {
           className="bg-primary/10 rounded-lg p-6"
         >
           <p className="text-lg font-medium text-primary">
-            "Potansiyelinizi keşfedin, geleceğinizi şekillendirin"
+            &ldquo;Potansiyelinizi keşfedin, geleceğinizi şekillendirin&rdquo;
           </p>
         </motion.div>
 
@@ -73,6 +73,7 @@ export function WelcomeScreen({ username, onContinue }: WelcomeScreenProps) {
           >
             Devam Et
           </Button>
+          <p>Click “Next” to continue</p>
         </motion.div>
       </motion.div>
     </div>

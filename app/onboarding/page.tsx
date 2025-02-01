@@ -118,7 +118,7 @@ export default function OnboardingPage() {
                   <SheetHeader className="space-y-2">
                     <SheetTitle>Yeni Hesap Oluştur</SheetTitle>
                     <SheetDescription>
-                      MentiUp'a hoş geldiniz! Hemen ücretsiz hesabınızı oluşturun ve mentorlarla tanışmaya başlayın.
+                      MentiUp&apos;a hoş geldiniz! Hemen ücretsiz hesabınızı oluşturun ve mentorlarla tanışmaya başlayın.
                     </SheetDescription>
                   </SheetHeader>
                   <div className="flex-1 overflow-y-auto py-6">
@@ -133,6 +133,7 @@ export default function OnboardingPage() {
               </SheetContent>
             </Sheet>
           </div>
+          <p>Let&apos;s get started with your profile setup</p>
         </motion.div>
       </div>
     </div>

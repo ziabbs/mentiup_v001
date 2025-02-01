@@ -2,7 +2,7 @@ import { createServerClient } from '@/lib/supabase/server-client'
 import { NextResponse } from 'next/server'
 
 // GET /api/profiles/mentorship - Get mentorship preferences
-export async function GET(request: Request) {
+export async function GET() {
   try {
     const supabase = createServerClient()
     
@@ -69,7 +69,7 @@ export async function PATCH(request: Request) {
     } = body
 
     // Start a transaction to update both preferences and career profile
-    const { data, error } = await supabase.rpc('update_mentorship_settings', {
+    const { error } = await supabase.rpc('update_mentorship_settings', {
       user_id: session.user.id,
       mentorship_prefs: mentorship_preferences,
       mentoring_areas_data: mentoring_areas,

@@ -10,7 +10,6 @@ import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Icons } from "@/components/ui/icons"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -35,6 +34,8 @@ interface AuthFormProps extends React.HTMLAttributes<HTMLDivElement> {
   mode: "login" | "register"
   submitText: string
   showTerms?: boolean
+  showRememberMe?: boolean
+  showForgotPassword?: boolean
   onSuccess?: () => void
 }
 
@@ -53,6 +54,8 @@ export function AuthForm({
   mode,
   submitText,
   showTerms = false,
+  showRememberMe = false,
+  showForgotPassword = false,
   onSuccess,
   className,
   ...props
@@ -157,10 +160,10 @@ export function AuthForm({
                 <FormLabel>Şifre</FormLabel>
                 <FormControl>
                   <Input
-                    placeholder="********"
+                    placeholder="••••••••"
                     type="password"
                     autoCapitalize="none"
-                    autoComplete={mode === "login" ? "current-password" : "new-password"}
+                    autoComplete="current-password"
                     autoCorrect="off"
                     disabled={isLoading}
                     {...field}
@@ -170,6 +173,30 @@ export function AuthForm({
               </FormItem>
             )}
           />
+          {mode === "login" && showRememberMe && (
+            <div className="flex items-center space-x-2">
+              <Checkbox id="remember" aria-label="Beni hatırla" />
+              <label
+                htmlFor="remember"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Beni hatırla
+              </label>
+            </div>
+          )}
+          {mode === "login" && showForgotPassword && (
+            <div className="flex justify-end">
+              <Button
+                variant="link"
+                className="px-0 font-normal text-primary"
+                onClick={() => router.push('/auth/forgot-password')}
+                type="button"
+                aria-label="Şifremi unuttum"
+              >
+                Şifremi unuttum
+              </Button>
+            </div>
+          )}
           {mode === "register" && (
             <FormField
               control={form.control}
@@ -179,7 +206,7 @@ export function AuthForm({
                   <FormLabel>Şifre Tekrar</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="********"
+                      placeholder="••••••••"
                       type="password"
                       autoCapitalize="none"
                       autoComplete="new-password"
@@ -242,9 +269,14 @@ export function AuthForm({
               {error}
             </div>
           )}
-          <Button disabled={isLoading} type="submit" className="w-full">
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={isLoading}
+            aria-label={submitText}
+          >
             {isLoading && (
-              <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+              <Icons.spinner className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
             )}
             {submitText}
           </Button>
