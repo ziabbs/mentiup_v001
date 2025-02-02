@@ -352,6 +352,181 @@ export interface Database {
           updated_at?: string
         }
       }
+      onboarding_mentorship_types: {
+        Row: {
+          id: string
+          slug: string
+          name: string
+          description: string | null
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          slug: string
+          name: string
+          description?: string | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          slug?: string
+          name?: string
+          description?: string | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      onboarding_option_categories: {
+        Row: {
+          id: string
+          slug: string
+          mentorship_type_id: string
+          category_type: string
+          name: string
+          description: string | null
+          is_required: boolean
+          allow_multiple: boolean
+          display_order: number
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          slug: string
+          mentorship_type_id: string
+          category_type: string
+          name: string
+          description?: string | null
+          is_required?: boolean
+          allow_multiple?: boolean
+          display_order?: number
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          slug?: string
+          mentorship_type_id?: string
+          category_type?: string
+          name?: string
+          description?: string | null
+          is_required?: boolean
+          allow_multiple?: boolean
+          display_order?: number
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      onboarding_options: {
+        Row: {
+          id: string
+          slug: string
+          category_id: string
+          value: string
+          name: string
+          description: string | null
+          icon: string | null
+          subcategories: Json | null
+          metadata: Json | null
+          display_order: number
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          slug: string
+          category_id: string
+          value: string
+          name: string
+          description?: string | null
+          icon?: string | null
+          subcategories?: Json | null
+          metadata?: Json | null
+          display_order?: number
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          slug?: string
+          category_id?: string
+          value?: string
+          name?: string
+          description?: string | null
+          icon?: string | null
+          subcategories?: Json | null
+          metadata?: Json | null
+          display_order?: number
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      onboarding_user_selections: {
+        Row: {
+          id: string
+          user_id: string
+          category_id: string
+          selected_options: Json
+          custom_input: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          category_id: string
+          selected_options?: Json
+          custom_input?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          category_id?: string
+          selected_options?: Json
+          custom_input?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      onboarding_user_expectations: {
+        Row: {
+          id: string
+          user_id: string
+          mentorship_type_id: string
+          expectation: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          mentorship_type_id: string
+          expectation: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          mentorship_type_id?: string
+          expectation?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never

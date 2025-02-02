@@ -1,0 +1,49 @@
+{
+  "industries": [
+    {
+      "id": "tech",
+      "label": "Teknoloji",
+      "subIndustries": [
+        "Yazılım",
+        "Donanım",
+        "E-ticaret",
+        "Telekomünikasyon",
+        "Fintech",
+        "Bulut Bilişim"
+      ]
+    },
+    {
+      "id": "finance",
+      "label": "Finans",
+      "subIndustries": [
+        "Bankacılık",
+        "Sigorta",
+        "Yatırım",
+        "Varlık Yönetimi",
+        "Kripto Para"
+      ]
+    },
+    {
+      "id": "health",
+      "label": "Sağlık",
+      "subIndustries": [
+        "Sağlık Teknolojileri",
+        "Biyoteknoloji",
+        "İlaç",
+        "Medikal Cihazlar",
+        "Dijital Sağlık"
+      ]
+    },
+    {
+      "id": "education",
+      "label": "Eğitim",
+      "subIndustries": [
+        "EdTech",
+        "Online Eğitim",
+        "K-12",
+        "Yüksek Öğrenim",
+        "Kurumsal Eğitim"
+      ]
+    }
+  ]
+}

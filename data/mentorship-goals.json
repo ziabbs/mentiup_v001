@@ -1,0 +1,24 @@
+{
+  "careerMentorshipGoals": [
+    {
+      "id": "self-discovery",
+      "label": "Kendimi tanımak, güçlü yönlerimi keşfetmek, buna uygun bir alan ve dar alan belirlemek"
+    },
+    {
+      "id": "career-planning",
+      "label": "Hedef belirlemek ve bir kariyer yol haritası oluşturmak"
+    },
+    {
+      "id": "personal-branding",
+      "label": "Kendime uygun bir dar alanda markalaşmak"
+    },
+    {
+      "id": "income-optimization",
+      "label": "Yeteneklerime uygun bir alanda maksimum geliri elde edebilmek"
+    },
+    {
+      "id": "job-search",
+      "label": "İş bulabilmek için gerekli desteği almak (CV oluşturma, Mülakat vb.)"
+    }
+  ]
+}

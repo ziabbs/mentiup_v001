@@ -1,0 +1,54 @@
+{
+  "careerFields": [
+    {
+      "id": "software",
+      "label": "Yazılım Geliştirme",
+      "subFields": [
+        "Web Geliştirme",
+        "Mobil Uygulama Geliştirme",
+        "Yapay Zeka ve Makine Öğrenmesi",
+        "Veri Bilimi",
+        "Siber Güvenlik",
+        "DevOps",
+        "UI/UX Tasarım"
+      ]
+    },
+    {
+      "id": "business",
+      "label": "İşletme ve Yönetim",
+      "subFields": [
+        "Proje Yönetimi",
+        "Ürün Yönetimi",
+        "İş Analizi",
+        "İnsan Kaynakları",
+        "Pazarlama",
+        "Satış",
+        "Finans"
+      ]
+    },
+    {
+      "id": "creative",
+      "label": "Yaratıcı Endüstriler",
+      "subFields": [
+        "Grafik Tasarım",
+        "Dijital Pazarlama",
+        "İçerik Üretimi",
+        "Sosyal Medya Yönetimi",
+        "Video Prodüksiyon",
+        "3D Modelleme"
+      ]
+    },
+    {
+      "id": "engineering",
+      "label": "Mühendislik",
+      "subFields": [
+        "Elektrik-Elektronik",
+        "Makine",
+        "İnşaat",
+        "Endüstri",
+        "Bilgisayar",
+        "Mekatronik"
+      ]
+    }
+  ]
+}
