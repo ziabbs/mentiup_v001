@@ -1,12 +1,10 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
 import { StepMessage } from "@/components/onboarding/step-message"
-import { Check } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useOnboarding } from "../../layout"
+import { useOnboarding } from "@/hooks/use-onboarding"
 
 interface Suggestion {
   id: string
@@ -43,31 +41,9 @@ export default function ExpectationPage() {
 
   const [expectation, setExpectation] = useState("")
   const [selectedSuggestion, setSelectedSuggestion] = useState<string | null>(null)
-  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  useEffect(() => {
-    setIsNextEnabled(false)
-    setOnNext(undefined)
-    setCurrentStep("Adım 3")
-    setTotalSteps("/ 4")
-    setProgress(75)
-    console.log("onboardingData:", onboardingData)
-  }, [setIsNextEnabled, setOnNext, setCurrentStep, setTotalSteps, setProgress, onboardingData])
-
-  useEffect(() => {
-    setIsNextEnabled(expectation.trim().length > 0)
-    setOnNext(() => handleSubmit)
-  }, [expectation, setIsNextEnabled, setOnNext])
-
-  const handleSuggestionClick = (text: string) => {
-    setExpectation(text)
-    setSelectedSuggestion(text)
-  }
-
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     try {
-      setIsSubmitting(true)
-
       // Beklentiyi kaydet
       setOnboardingData({
         expectations: expectation,
@@ -87,9 +63,26 @@ export default function ExpectationPage() {
       router.push("/onboarding/completion")
     } catch (error) {
       console.error("Error submitting expectation:", error)
-    } finally {
-      setIsSubmitting(false)
     }
+  }, [expectation, onboardingData.stepChoices, router, setChatValue, setOnboardingData])
+
+  useEffect(() => {
+    setIsNextEnabled(false)
+    setOnNext(undefined)
+    setCurrentStep("Adım 3")
+    setTotalSteps("/ 4")
+    setProgress(75)
+    console.log("onboardingData:", onboardingData)
+  }, [setIsNextEnabled, setOnNext, setCurrentStep, setTotalSteps, setProgress, onboardingData])
+
+  useEffect(() => {
+    setIsNextEnabled(expectation.trim().length > 0)
+    setOnNext(() => handleSubmit)
+  }, [expectation, setIsNextEnabled, setOnNext, handleSubmit])
+
+  const handleSuggestionClick = (text: string) => {
+    setExpectation(text)
+    setSelectedSuggestion(text)
   }
 
   return (

@@ -5,8 +5,7 @@ import { useRouter } from "next/navigation"
 import { Check } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { MultiSelect } from "@/components/ui/multi-select"
-import { useOnboarding } from '../../layout'
-import { LolaMessage } from "@/components/onboarding/lola-message"
+import { useOnboarding } from '@/hooks/use-onboarding'
 
 interface Option {
   value: string

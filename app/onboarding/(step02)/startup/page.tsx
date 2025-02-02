@@ -5,8 +5,7 @@ import { useRouter } from "next/navigation"
 import { Check } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { MultiSelect } from "@/components/ui/multi-select"
-import { useOnboarding } from '../../layout'
-import { LolaMessage } from "@/components/onboarding/lola-message"
+import { useOnboarding } from '@/hooks/use-onboarding'
 
 interface Option {
   value: string
@@ -148,8 +147,6 @@ export default function StartupPage() {
   const [selectedGoals, setSelectedGoals] = useState<string[]>([])
   const [otherStageInput, setOtherStageInput] = useState("")
   const [otherGoalInput, setOtherGoalInput] = useState("")
-  const [isOtherStageSelected, setIsOtherStageSelected] = useState(false)
-  const [isOtherGoalSelected, setIsOtherGoalSelected] = useState(false)
 
   useEffect(() => {
     setCurrentStep("Adım 2")
@@ -219,7 +216,7 @@ export default function StartupPage() {
     } else {
       setOnNext(undefined)
     }
-  }, [selectedFields, selectedStage, selectedGoals]) 
+  }, [selectedFields, selectedStage, selectedGoals, chatMessage, onboardingDataUpdate, setIsNextEnabled, setOnboardingData, setChatValue, setOnNext, router])
 
   const handleFieldsChange = (fields: Option[]) => {
     setSelectedFields(fields)
@@ -227,27 +224,28 @@ export default function StartupPage() {
 
   const handleStageSelect = (stageId: string) => {
     if (stageId === "startup_stage_other") {
-      setIsOtherStageSelected(true)
-    } else {
-      setIsOtherStageSelected(false)
       setOtherStageInput("")
     }
     setSelectedStage(stageId)
   }
 
   const handleGoalSelect = (goalId: string) => {
-    const newGoals = selectedGoals.includes(goalId)
-      ? selectedGoals.filter(id => id !== goalId)
-      : [...selectedGoals, goalId]
-    
     if (goalId === "startup_goal_other") {
-      setIsOtherGoalSelected(!selectedGoals.includes(goalId))
-      if (selectedGoals.includes(goalId)) {
+      if (!selectedGoals.includes(goalId)) {
+        setSelectedGoals([...selectedGoals, goalId])
+      } else {
         setOtherGoalInput("")
+        setSelectedGoals(selectedGoals.filter(id => id !== goalId))
       }
+    } else {
+      setSelectedGoals(
+        selectedGoals.includes(goalId)
+          ? selectedGoals.filter(id => id !== goalId)
+          : selectedGoals.length < 3
+          ? [...selectedGoals, goalId]
+          : selectedGoals
+      )
     }
-    
-    setSelectedGoals(newGoals)
   }
 
   return (
@@ -268,10 +266,10 @@ export default function StartupPage() {
                   >
                     <div className="space-y-2">
                       <h3 className="text-base sm:text-lg font-semibold tracking-tight text-emerald-800 dark:text-emerald-200">
-                        Startup'ınızın Alanı
+                        Startup&apos;ınızın Alanı
                       </h3>
                       <p className="text-sm text-gray-600 dark:text-gray-300">
-                        Startup'ınızı hayata geçirdiğiniz alan, iş, meslek alanı veya sektör
+                        Startup&apos;ınızı hayata geçirdiğiniz alan, iş, meslek alanı veya sektör
                       </p>
                       <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/30">
                         <span className="text-xs text-emerald-700 dark:text-emerald-300">
@@ -303,7 +301,7 @@ export default function StartupPage() {
                   >
                     <div className="space-y-2">
                       <h3 className="text-base sm:text-lg font-semibold tracking-tight text-emerald-800 dark:text-emerald-200">
-                        Startup'ınız Hangi Aşamada?
+                        Startup&apos;ınız Hangi Aşamada?
                       </h3>
                       <p className="text-sm text-gray-600 dark:text-gray-300">
                         Şu an bulunduğunuz aşamayı seçin

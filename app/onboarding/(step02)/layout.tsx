@@ -2,15 +2,7 @@
 
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { useOnboarding } from "../layout"
-import { StepMessage } from "@/components/onboarding/step-message"
-
-const mentorshipTypeMessages = {
-  "career_development": "kariyer gelişiminiz",
-  "startup": "startup yolculuğunuz",
-  "senior_career": "üst düzey kariyer hedefleriniz",
-  "senior_startup": "üst düzey startup hedefleriniz"
-}
+import { useOnboarding } from "@/hooks/use-onboarding"
 
 export default function Step2Layout({
   children,
@@ -45,24 +37,7 @@ export default function Step2Layout({
     }
   }, [setCurrentStep, setTotalSteps, setProgress, onboardingData.mentorshipType, router])
 
-  // Önceki adımın seçimini al
-  const previousChoice = onboardingData.stepChoices?.["step1"] || (
-    onboardingData.mentorshipType ? {
-      label: "Seçilen Mentorluk Tipi",
-      value: mentorshipTypeMessages[onboardingData.mentorshipType as keyof typeof mentorshipTypeMessages] || onboardingData.mentorshipType
-    } : undefined
-  )
-
   return (
-    <main className="relative p-4 space-y-16">
-      
-        <StepMessage
-          message="Harika! Şimdi hedeflerinizi belirleyelim."
-          subMessage="Size en uygun hedefleri seçin"
-          previousChoice={previousChoice}
-        />
-        
-        {children}
-    </main>
+    <>{children}</>
   )
 }

@@ -1,12 +1,14 @@
 "use client"
 
-import { useEffect, useState, useMemo } from "react"
+import { useEffect, useState } from "react"
+import type { ReactNode } from "react"
 import { useRouter } from "next/navigation"
-import { Check } from "lucide-react"
+import { Check, Lightbulb, CheckCircle, Rocket, Send, TrendingUp } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { MultiSelect } from "@/components/ui/multi-select"
-import { useOnboarding } from '../../layout'
-import { LolaMessage } from "@/components/onboarding/lola-message"
+import { useOnboarding } from '@/hooks/use-onboarding'
+import { QuestionsContainer } from "@/components/onboarding/questions-container"
+import { StepMessage } from "@/components/onboarding/step-message"
 
 interface Option {
   value: string
@@ -18,6 +20,7 @@ interface Stage {
   id: string
   title: string
   description: string
+  icon: ReactNode
 }
 
 interface Goal {
@@ -61,32 +64,38 @@ const stageOptions: Stage[] = [
   {
     id: "senior_startup_stage_idea",
     title: "Fikir Aşaması",
-    description: "Henüz fikir aşamasında, konsept geliştirme sürecinde"
+    description: "Henüz fikir aşamasındayım ve bu fikri nasıl hayata geçireceğimi öğrenmek istiyorum.",
+    icon: <Lightbulb className="h-6 w-6" />
   },
   {
-    id: "senior_startup_stage_development",
-    title: "Fikri Ürüne Dönüştürme",
-    description: "MVP geliştirme ve ürün doğrulama süreci"
-  },
-  {
-    id: "senior_startup_stage_team",
-    title: "Ekip Oluşturma",
-    description: "Yazılımcı ve diğer ekip üyelerini bulma süreci"
+    id: "senior_startup_stage_validation",
+    title: "Doğrulama Aşaması",
+    description: "Fikrimi doğrulamak ve pazar araştırmaları yapmak istiyorum.",
+    icon: <CheckCircle className="h-6 w-6" />
   },
   {
     id: "senior_startup_stage_mvp",
-    title: "MVP Oluşturma",
-    description: "Minimum uygulanabilir ürün geliştirme aşaması"
+    title: "MVP Aşaması",
+    description: "Minimum uygulanabilir ürün (MVP) geliştirme aşamasındayım.",
+    icon: <Rocket className="h-6 w-6" />
   },
   {
-    id: "senior_startup_stage_seed",
-    title: "Tohum Yatırım",
-    description: "İlk yatırım turuna hazırlık ve yatırım arama"
+    id: "senior_startup_stage_launch",
+    title: "Lansman Aşaması",
+    description: "Ürünümü piyasaya sürmek ve ilk müşterilerimi edinmek üzereyim.",
+    icon: <Send className="h-6 w-6" />
+  },
+  {
+    id: "senior_startup_stage_growth",
+    title: "Büyüme Aşaması",
+    description: "Ürünüm piyasada ve şimdi büyümeye odaklanmak istiyorum.",
+    icon: <TrendingUp className="h-6 w-6" />
   },
   {
     id: "senior_startup_stage_other",
     title: "Diğer",
-    description: "Farklı bir aşama"
+    description: "Farklı bir aşama",
+    icon: <CheckCircle className="h-6 w-6" />
   }
 ]
 
@@ -132,309 +141,245 @@ const goalOptions: Goal[] = [
 
 export default function SeniorStartupPage() {
   const router = useRouter()
-  const { setCurrentStep, setChatValue, setIsNextEnabled, setOnNext, setOnboardingData, onboardingData } = useOnboarding()
+  const { setCurrentStep, setChatValue, setIsNextEnabled, setOnNext } = useOnboarding()
 
   const [selectedFields, setSelectedFields] = useState<Option[]>([])
   const [selectedStage, setSelectedStage] = useState<string>("")
   const [selectedGoals, setSelectedGoals] = useState<string[]>([])
-  const [otherStageInput, setOtherStageInput] = useState("")
-  const [otherGoalInput, setOtherGoalInput] = useState("")
-  const [isOtherStageSelected, setIsOtherStageSelected] = useState(false)
-  const [isOtherGoalSelected, setIsOtherGoalSelected] = useState(false)
 
   useEffect(() => {
     setCurrentStep("Adım 2")
   }, [setCurrentStep])
 
-  // Compute chat message
-  const chatMessage = useMemo(() => {
-    let message = ""
-    
-    if (selectedFields.length > 0) {
-      const fieldsText = selectedFields.map(field => field.label).join(", ")
-      message += `Girişim Alanı: ${fieldsText}`
-    }
-
-    if (selectedStage) {
-      const stage = stageOptions.find(s => s.id === selectedStage)
-      const stageText = stage?.id === "senior_startup_stage_other" ? otherStageInput || "Diğer" : stage?.title
-      message += `${message ? '\n' : ''}Aşama: ${stageText}`
-    }
-
-    if (selectedGoals.length > 0) {
-      const goalsText = selectedGoals
-        .map(id => {
-          if (id === "senior_startup_goal_other") {
-            return otherGoalInput || "Diğer"
-          }
-          return goalOptions.find(g => g.id === id)?.title
-        })
-        .filter(Boolean)
-        .join(", ")
-      message += `${message ? '\n' : ''}Mentorluk Hedefleri: ${goalsText}`
-    }
-
-    return message
-  }, [selectedFields, selectedStage, selectedGoals, otherStageInput, otherGoalInput])
-
-  // Compute onboarding data
-  const onboardingDataUpdate = useMemo(() => ({
-    fields: selectedFields.map(f => ({ value: f.value, label: f.label })),
-    goals: selectedGoals,
-    ...(selectedStage ? { stage: selectedStage } : {}),
-    stepChoices: {
-      ...onboardingData.stepChoices,
-      step2: {
-        label: "2. Adımda Seçilenler",
-        value: chatMessage
-      }
-    }
-  }), [selectedFields, selectedGoals, selectedStage, chatMessage, onboardingData.stepChoices])
-
   useEffect(() => {
-    const hasFields = selectedFields.length > 0
-    const hasStage = selectedStage !== ""
-    const hasGoals = selectedGoals.length > 0
-    const isComplete = hasFields && hasStage && hasGoals
-
-    setIsNextEnabled(isComplete)
-
-    if (selectedFields.length > 0 || selectedStage || selectedGoals.length > 0) {
-      setOnboardingData(onboardingDataUpdate)
-    }
-
-    if (isComplete) {
-      // Chat input'u güncelle
-      setChatValue(chatMessage)
-      
-      // Sonraki adıma geç
+    // Seçim yapılmış mı kontrol et
+    if (selectedFields.length > 0 && selectedStage && selectedGoals.length > 0) {
+      setIsNextEnabled(true)
       setOnNext(() => () => router.push("/onboarding/expectation"))
     } else {
+      setIsNextEnabled(false)
       setOnNext(undefined)
     }
-  }, [selectedFields, selectedStage, selectedGoals])
+  }, [selectedFields, selectedStage, selectedGoals, setIsNextEnabled, setOnNext, router])
+
+  // Handle functions
+  const handleFieldsSelect = (fields: Option[]) => {
+    setSelectedFields(fields)
+    if (fields.length > 0) {
+      const fieldsText = fields.map(f => f.label).join(", ")
+      setChatValue(fieldsText)
+    }
+  }
 
   const handleStageSelect = (stageId: string) => {
-    if (stageId === "senior_startup_stage_other") {
-      setIsOtherStageSelected(true)
-    } else {
-      setIsOtherStageSelected(false)
-      setOtherStageInput("")
-    }
     setSelectedStage(stageId)
+    const stage = stageOptions.find(s => s.id === stageId)
+    if (stage) {
+      setChatValue(stage.title)
+    }
   }
 
   const handleGoalSelect = (goalId: string) => {
-    if (goalId === "senior_startup_goal_other") {
-      if (!selectedGoals.includes(goalId)) {
-        setIsOtherGoalSelected(true)
-      } else {
-        setIsOtherGoalSelected(false)
-        setOtherGoalInput("")
+    const updatedGoals = selectedGoals.includes(goalId)
+      ? selectedGoals.filter(id => id !== goalId)
+      : selectedGoals.length < 3
+      ? [...selectedGoals, goalId]
+      : selectedGoals
+
+    setSelectedGoals(updatedGoals)
+    
+    if (updatedGoals.length > 0) {
+      const goals = updatedGoals.map(id => {
+        const goal = goalOptions.find(g => g.id === id)
+        return goal?.title || ""
+      }).filter(Boolean)
+      setChatValue(goals.join(", "))
+    }
+  }
+
+  // Önceki seçimi formatla
+  const formatPreviousChoice = (step: number): { label: string; value: string } | undefined => {
+    if (step === 1 && selectedFields.length > 0) {
+      return {
+        label: "Seçilen alanlar",
+        value: selectedFields.map(f => f.label).join(", ")
       }
     }
+    if (step === 2 && selectedStage) {
+      const stage = stageOptions.find(s => s.id === selectedStage)
+      return stage ? {
+        label: "Seçilen aşama",
+        value: stage.title
+      } : undefined
+    }
+    return undefined
+  }
 
-    setSelectedGoals(prev => {
-      if (prev.includes(goalId)) {
-        return prev.filter(id => id !== goalId)
-      }
-      if (prev.length >= 3) {
-        return prev
-      }
-      return [...prev, goalId]
-    })
+  // Lola'nın cevaplarını al
+  const getLolaResponse = (step: number): string => {
+    if (step === 1) {
+      return "Harika! Şimdi girişiminizin hangi aşamada olduğunu öğrenmek istiyorum."
+    }
+    if (step === 2) {
+      return "Son olarak, size nasıl yardımcı olabileceğimi öğrenmek istiyorum."
+    }
+    return ""
   }
 
   return (
-    <div className="flex-1 flex flex-col">
-      <div className="flex-1 overflow-y-auto">
-        <div className="max-w-screen-lg mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
-          <div className="space-y-8">
-            
-
-            <div className="space-y-6">
-              <div className="space-y-8">
-                <div className="space-y-6">
-                  {/* Startup Fields */}
-                  <div 
-                    className="space-y-4"
-                    role="region"
-                    aria-label="Girişim Alanı Seçimi"
-                  >
-                    <div className="space-y-2">
-                      <h3 className="text-base sm:text-lg font-semibold tracking-tight text-emerald-800 dark:text-emerald-200">
-                        Girişim Alanınız
-                      </h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">
-                        Girişiminizi hayata geçirmek istediğiniz alan, iş, meslek alanı veya sektör
-                      </p>
-                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/30">
-                        <span className="text-xs text-emerald-700 dark:text-emerald-300">
-                          Birden fazla alan seçebilirsiniz
-                        </span>
-                      </div>
-                    </div>
-                    <MultiSelect
-                      id="senior-startup-fields-select"
-                      options={startupFieldOptions}
-                      selected={selectedFields}
-                      onChange={setSelectedFields}
-                      maxSelections={3}
-                      aria-label="Girişim alanı seçin"
-                      aria-required={true}
-                      aria-describedby="fields-description"
-                    />
-                    <p id="fields-description" className="sr-only">
-                      En fazla 3 girişim alanı seçebilirsiniz
-                    </p>
-                  </div>
-
-                  {/* Startup Stage */}
-                  <div 
-                    className="space-y-3"
-                    role="region"
-                    aria-label="Girişim Aşaması"
-                  >
-                    <div className="space-y-2">
-                      <h3 className="text-base sm:text-lg font-semibold tracking-tight text-emerald-800 dark:text-emerald-200">
-                        Girişiminiz İçin Hangi Aşamadasınız?
-                      </h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">
-                        Şu an bulunduğunuz aşamayı seçin
-                      </p>
-                    </div>
-                    
-                    <div 
-                      role="radiogroup" 
-                      aria-label="Girişim aşaması"
-                      className="space-y-2"
-                    >
-                      {stageOptions.map((stage) => (
-                        <button
-                          key={stage.id}
-                          onClick={() => handleStageSelect(stage.id)}
-                          className={cn(
-                            "w-full text-left px-4 py-3 rounded-lg border-2 transition-all duration-200",
-                            "hover:bg-emerald-50 dark:hover:bg-emerald-950/20",
-                            "focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400",
-                            selectedStage === stage.id
-                              ? "border-emerald-500/30 bg-emerald-50/50 dark:bg-emerald-950/20"
-                              : "border-emerald-100 dark:border-emerald-900/10"
-                          )}
-                          role="radio"
-                          aria-checked={selectedStage === stage.id}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <h3 className="font-medium">{stage.title}</h3>
-                              <p className="text-sm text-gray-600 dark:text-gray-300">
-                                {stage.description}
-                              </p>
-                              {stage.id === "senior_startup_stage_other" && selectedStage === stage.id && (
-                                <div className="mt-2">
-                                  <input
-                                    type="text"
-                                    value={otherStageInput}
-                                    onChange={(e) => setOtherStageInput(e.target.value)}
-                                    placeholder="Aşamayı buraya yazabilirsiniz..."
-                                    className="w-full p-2 text-sm bg-white dark:bg-gray-800 rounded-md border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400"
-                                    autoFocus
-                                    onClick={(e) => e.stopPropagation()}
-                                    aria-label="Diğer aşama açıklaması"
-                                  />
-                                </div>
-                              )}
-                            </div>
-                            {selectedStage === stage.id && (
-                              <Check className="w-5 h-5 text-emerald-500" aria-hidden="true" />
-                            )}
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Mentorship Goals */}
-                  <div 
-                    className="space-y-3"
-                    role="region"
-                    aria-label="Mentorluk Hedefleri"
-                  >
-                    <div className="space-y-2">
-                      <h3 className="text-base sm:text-lg font-semibold tracking-tight text-emerald-800 dark:text-emerald-200">
-                        Ne Tür Bir Girişim Mentorluğu Almak İstiyorsunuz?
-                      </h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">
-                        Mentorunuzdan nasıl bir destek beklersiniz?
-                      </p>
-                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/30">
-                        <span className="text-xs text-emerald-700 dark:text-emerald-300">
-                          En fazla 3 hedef seçebilirsiniz
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <div 
-                      role="group" 
-                      aria-label="Mentorluk hedefleri"
-                      className="space-y-2"
-                    >
-                      {goalOptions.map((goal) => (
-                        <button
-                          key={goal.id}
-                          onClick={() => handleGoalSelect(goal.id)}
-                          className={cn(
-                            "w-full text-left px-4 py-3 rounded-lg border-2 transition-all duration-200",
-                            "hover:bg-emerald-50 dark:hover:bg-emerald-950/20",
-                            "focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400",
-                            selectedGoals.includes(goal.id)
-                              ? "border-emerald-500/30 bg-emerald-50/50 dark:bg-emerald-950/20"
-                              : "border-emerald-100 dark:border-emerald-900/10"
-                          )}
-                          role="checkbox"
-                          aria-checked={selectedGoals.includes(goal.id)}
-                        >
-                          <div className="flex items-center gap-3">
-                            <span className="text-xl" aria-hidden="true">{goal.icon}</span>
-                            <div className="flex-1">
-                              <h3 className="font-medium">{goal.title}</h3>
-                              <p className="text-sm text-gray-600 dark:text-gray-300">
-                                {goal.description}
-                              </p>
-                              {goal.id === "senior_startup_goal_other" && selectedGoals.includes(goal.id) && (
-                                <div className="mt-2">
-                                  <input
-                                    type="text"
-                                    value={otherGoalInput}
-                                    onChange={(e) => setOtherGoalInput(e.target.value)}
-                                    placeholder="Hedefini buraya yazabilirsin..."
-                                    className="w-full p-2 text-sm bg-white dark:bg-gray-800 rounded-md border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400"
-                                    autoFocus
-                                    onClick={(e) => e.stopPropagation()}
-                                    onKeyDown={(e) => {
-                                      if (e.key === "Enter") {
-                                        e.preventDefault()
-                                      }
-                                    }}
-                                    aria-label="Diğer hedef açıklaması"
-                                  />
-                                </div>
-                              )}
-                            </div>
-                            {selectedGoals.includes(goal.id) && (
-                              <Check className="w-5 h-5 text-emerald-500" aria-hidden="true" />
-                            )}
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+    <main className="flex-1">
+      <div className="container max-w-3xl mx-auto p-4 sm:p-6">
+        <div className="relative space-y-6">
+          {/* Soru 1: Startup Fields */}
+          <QuestionsContainer>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <h3 className="text-base sm:text-lg font-semibold tracking-tight text-emerald-800 dark:text-emerald-200">
+                  Girişiminiz Hangi Alanlarda Faaliyet Gösteriyor?
+                </h3>
+                <p className="text-sm text-emerald-700 dark:text-emerald-300">
+                  En fazla 3 alan seçebilirsiniz
+                </p>
               </div>
+
+              <div className="relative z-[60]">
+                <MultiSelect
+                  id="senior-startup-fields-select"
+                  options={startupFieldOptions}
+                  selected={selectedFields}
+                  onChange={handleFieldsSelect}
+                  maxSelections={3}
+                  aria-label="Girişim alanı seçin"
+                  aria-required={true}
+                  aria-describedby="fields-description"
+                />
+              </div>
+
+              {selectedFields.length > 0 && (
+                <p className="text-sm text-emerald-600 dark:text-emerald-400 italic">
+                  Seçiminizi yaptınız! Devam etmek için gönder butonunu kullanabilirsiniz.
+                </p>
+              )}
             </div>
-          </div>
+          </QuestionsContainer>
+
+          {/* Soru 2: Startup Stage */}
+          <StepMessage
+            message={getLolaResponse(1)}
+            previousChoice={formatPreviousChoice(1)}
+          />
+          <QuestionsContainer>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <h3 className="text-base sm:text-lg font-semibold tracking-tight text-emerald-800 dark:text-emerald-200">
+                  Girişiminiz Hangi Aşamada?
+                </h3>
+                <p className="text-sm text-emerald-700 dark:text-emerald-300">
+                  Size en uygun aşamayı seçin
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {stageOptions.map((stage) => (
+                  <button
+                    key={stage.id}
+                    onClick={() => handleStageSelect(stage.id)}
+                    className={cn(
+                      "flex items-center justify-between p-3 rounded-lg border transition-all duration-200",
+                      "hover:bg-emerald-50 dark:hover:bg-emerald-900/30",
+                      "focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-emerald-900",
+                      selectedStage === stage.id
+                        ? "bg-emerald-50 dark:bg-emerald-900/30 border-emerald-200 dark:border-emerald-700"
+                        : "border-transparent"
+                    )}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="flex-shrink-0 mt-1">
+                        {stage.icon}
+                      </div>
+                      <div className="text-left">
+                        <div className="font-medium text-emerald-800 dark:text-emerald-200">
+                          {stage.title}
+                        </div>
+                        <div className="text-sm text-emerald-600 dark:text-emerald-400">
+                          {stage.description}
+                        </div>
+                      </div>
+                    </div>
+                    {selectedStage === stage.id && (
+                      <Check className="w-5 h-5 text-emerald-500 dark:text-emerald-400" />
+                    )}
+                  </button>
+                ))}
+              </div>
+
+              {selectedStage && (
+                <p className="text-sm text-emerald-600 dark:text-emerald-400 italic">
+                  Seçiminizi yaptınız! Devam etmek için gönder butonunu kullanabilirsiniz.
+                </p>
+              )}
+            </div>
+          </QuestionsContainer>
+
+          {/* Soru 3: Mentorship Goals */}
+          <StepMessage
+            message={getLolaResponse(2)}
+            previousChoice={formatPreviousChoice(2)}
+          />
+          <QuestionsContainer>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <h3 className="text-base sm:text-lg font-semibold tracking-tight text-emerald-800 dark:text-emerald-200">
+                  Mentorluk Desteğini Hangi Konularda İstiyorsun?
+                </h3>
+                <p className="text-sm text-emerald-700 dark:text-emerald-300">
+                  En fazla 3 konu seçebilirsiniz
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {goalOptions.map((goal) => (
+                  <button
+                    key={goal.id}
+                    onClick={() => handleGoalSelect(goal.id)}
+                    className={cn(
+                      "flex items-center justify-between p-3 rounded-lg border transition-all duration-200",
+                      "hover:bg-emerald-50 dark:hover:bg-emerald-900/30",
+                      "focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-emerald-900",
+                      selectedGoals.includes(goal.id)
+                        ? "bg-emerald-50 dark:bg-emerald-900/30 border-emerald-200 dark:border-emerald-700"
+                        : "border-transparent"
+                    )}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="flex-shrink-0 mt-1">
+                        {goal.icon}
+                      </div>
+                      <div className="text-left">
+                        <div className="font-medium text-emerald-800 dark:text-emerald-200">
+                          {goal.title}
+                        </div>
+                        <div className="text-sm text-emerald-600 dark:text-emerald-400">
+                          {goal.description}
+                        </div>
+                      </div>
+                    </div>
+                    {selectedGoals.includes(goal.id) && (
+                      <Check className="w-5 h-5 text-emerald-500 dark:text-emerald-400" />
+                    )}
+                  </button>
+                ))}
+              </div>
+
+              {selectedGoals.length > 0 && (
+                <p className="text-sm text-emerald-600 dark:text-emerald-400 italic">
+                  Seçiminizi yaptınız! Devam etmek için gönder butonunu kullanabilirsiniz.
+                </p>
+              )}
+            </div>
+          </QuestionsContainer>
         </div>
       </div>
-    </div>
+    </main>
   )
 }

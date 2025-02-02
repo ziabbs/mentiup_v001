@@ -5,7 +5,7 @@ import { Rocket, Star, Lightbulb, Target, Check } from "lucide-react"
 import { useState, useEffect } from "react"
 import type { ReactElement } from "react"
 import { cn } from '@/lib/utils'
-import { useOnboarding } from '../../layout'
+import { useOnboarding } from '@/hooks/use-onboarding'
 import { LolaMessage } from "@/components/onboarding/lola-message"
 
 type MentorshipType = {

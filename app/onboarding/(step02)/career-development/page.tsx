@@ -1,17 +1,28 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useCallback } from "react"
+import type { ReactNode } from "react"
 import { cn } from '@/lib/utils'
-import { useOnboarding } from '../../layout'
+import { useOnboarding } from '@/hooks/use-onboarding'
 import { MultiSelect } from '@/components/ui/multi-select'
-import { Check } from 'lucide-react'
+import { Check, Briefcase, Building2, Target } from 'lucide-react'
 import { LolaMessage } from "@/components/onboarding/lola-message"
+import { QuestionsContainer } from "@/components/onboarding/questions-container"
+import { StepMessage } from "@/components/onboarding/step-message"
+import { Button } from "@/components/ui/button"
 
 interface Option {
   value: string
   label: string
   subcategories?: string[]
+}
+
+interface Goal {
+  id: string
+  title: string
+  description: string
+  icon: ReactNode
 }
 
 // Career fields data
@@ -49,31 +60,6 @@ const careerFieldOptions: Option[] = [
     value: "career_development_field_communication",
     label: "İletişim",
     subcategories: ["Tanıtım", "Halkla İlişkiler", "Sosyal Medya", "Reklam"]
-  },
-  {
-    value: "career_development_field_it",
-    label: "Bilişim",
-    subcategories: ["Bilgi İşlem", "Bilgi Yönetimi"]
-  },
-  {
-    value: "career_development_field_software",
-    label: "Yazılım"
-  },
-  {
-    value: "career_development_field_hr",
-    label: "İnsan Kaynakları"
-  },
-  {
-    value: "career_development_field_design",
-    label: "Tasarım"
-  },
-  {
-    value: "career_development_field_education",
-    label: "Eğitim"
-  },
-  {
-    value: "career_development_field_law",
-    label: "Hukuk"
   }
 ]
 
@@ -186,252 +172,339 @@ const industryOptions: Option[] = [
   }
 ]
 
-// Goals data
-const goalOptions = [
-  {
-    id: "career_development_goal_discover_strengths",
-    title: "Güçlü yönlerimi keşfetmek",
-    icon: "💪"
-  },
-  {
-    id: "career_development_goal_find_focus",
-    title: "Bana uygun bir alan ve dar alan belirlemek",
-    icon: "🎯"
-  },
+// Career goals data
+const goalOptions: Goal[] = [
   {
     id: "career_development_goal_career_roadmap",
     title: "Hedef belirlemek ve bir kariyer yol haritası oluşturmak",
-    icon: "🗺️"
+    description: "Kariyerinizde ilerlemek için net hedefler belirlemek ve bu hedeflere ulaşmak için bir yol haritası oluşturmak",
+    icon: <Target className="h-6 w-6" />
   },
   {
     id: "career_development_goal_personal_branding",
     title: "Kendime uygun bir dar alanda markalaşmak",
-    icon: "✨"
+    description: "Uzmanlık alanınızda güçlü bir kişisel marka oluşturmak ve tanınırlığınızı artırmak",
+    icon: <Briefcase className="h-6 w-6" />
   },
   {
     id: "career_development_goal_maximize_income",
     title: "Yeteneklerime uygun bir alanda maksimum geliri elde edebilmek",
-    icon: "💰"
+    description: "Becerilerinizi en iyi şekilde değerlendirerek potansiyel gelirinizi maksimize etmek",
+    icon: <Building2 className="h-6 w-6" />
   },
   {
     id: "career_development_goal_job_support",
-    title: "İş bulabilmek için gerekli desteği almak (CV oluşturma, Mülakat vb.)",
-    icon: "📝"
+    title: "İş bulabilmek için gerekli desteği almak",
+    description: "CV hazırlama, mülakat teknikleri ve iş arama stratejileri konusunda profesyonel destek almak",
+    icon: <Target className="h-6 w-6" />
   },
   {
     id: "career_development_goal_other",
     title: "Diğer",
-    icon: "➕"
+    description: "Yukarıdakilerden farklı bir hedef",
+    icon: <Target className="h-6 w-6" />
   }
 ]
 
 export default function CareerDevelopmentPage() {
   const router = useRouter()
-  const { setChatValue, setIsNextEnabled, setProgress, setOnNext, setCurrentStep, setTotalSteps, setOnboardingData, onboardingData } = useOnboarding()
+  const { 
+    setChatValue, 
+    setIsNextEnabled, 
+    setProgress, 
+    setOnNext, 
+    setCurrentStep, 
+    setTotalSteps, 
+    setOnboardingData, 
+    onboardingData 
+  } = useOnboarding()
 
-  const [state, setState] = useState({
-    fields: [] as Option[],
-    industries: [] as Option[],
-    goals: [] as string[],
-    otherGoal: "",
-    isOtherGoalSelected: false
-  })
+  // State
+  const [selectedFields, setSelectedFields] = useState<Option[]>([])
+  const [selectedIndustries, setSelectedIndustries] = useState<Option[]>([])
+  const [selectedGoals, setSelectedGoals] = useState<string[]>([])
+  const [currentQuestionStep, setCurrentQuestionStep] = useState(1)
+  const [hasSelection, setHasSelection] = useState(false)
+  const [isTyping, setIsTyping] = useState(false)
 
-  // Set initial step info
+  // Compute onboarding data
+  const onboardingDataUpdate = useMemo(() => ({
+    fields: selectedFields.map(field => ({
+      value: field.value,
+      label: field.label
+    })),
+    goals: selectedGoals,
+    stepChoices: {
+      step2: {
+        label: "Seçilen hedefler",
+        value: selectedGoals
+          .map(id => goalOptions.find(g => g.id === id)?.title)
+          .filter(Boolean)
+          .join(", ")
+      }
+    }
+  }), [selectedFields, selectedGoals])
+
+  // Handle functions
+  const handleGoalsSubmit = useCallback(() => {
+    setOnboardingData(onboardingDataUpdate)
+    router.push("/onboarding/expectation")
+  }, [onboardingDataUpdate, setOnboardingData, router])
+
   useEffect(() => {
     setCurrentStep("Adım 2")
     setTotalSteps("/ 4")
     setProgress(50)
-  }, [setCurrentStep, setTotalSteps, setProgress])
 
-  // Compute derived state
-  const { hasFields, hasGoals, isComplete } = useMemo(() => {
-    const hasFields = state.fields.length > 0
-    const hasGoals = state.goals.length > 0
-    return {
-      hasFields,
-      hasGoals,
-      isComplete: hasFields && hasGoals
+    if (!onboardingData.mentorshipType) {
+      router.push("/onboarding")
+      return
     }
-  }, [state.fields.length, state.goals.length])
 
-  // Update chat message
-  const chatMessage = useMemo(() => {
-    const fieldsText = state.fields
-      .map(field => field.label)
-      .join(", ")
-    
-    const industriesText = state.industries
-      .map(industry => industry.label)
-      .join(", ")
-    
-    const goalsText = state.goals
-      .map(id => {
-        if (id === "career_development_goal_other") {
-          return state.otherGoal || "Diğer"
-        }
-        return goalOptions.find(g => g.id === id)?.title
-      })
-      .filter(Boolean)
-      .join(", ")
-
-    let message = ""
-    if (fieldsText) message += `Kariyer Alanları: ${fieldsText}`
-    if (industriesText) message += `${message ? '\n' : ''}Sektörler: ${industriesText}`
-    if (goalsText) message += `${message ? '\n' : ''}Hedefler: ${goalsText}`
-    
-    return message
-  }, [state])
-
-  // Compute onboarding data
-  const onboardingDataUpdate = useMemo(() => ({
-    fields: state.fields.map(f => ({ value: f.value, label: f.label })),
-    goals: state.goals,
-    stepChoices: {
-      ...onboardingData.stepChoices,
-      step2: {
-        label: "2. Adımda Seçilenler",
-        value: chatMessage
-      }
-    }
-  }), [state.fields, state.goals, chatMessage, onboardingData.stepChoices])
-
-  // Update UI state and data
-  useEffect(() => {
-    setIsNextEnabled(isComplete)
-    setChatValue(chatMessage)
-    
-    if (hasFields || hasGoals) {
+    // Tüm seçimler tamamlandıysa
+    if (selectedFields.length > 0 && selectedIndustries.length > 0 && selectedGoals.length > 0) {
       setOnboardingData(onboardingDataUpdate)
-    }
-
-    if (isComplete) {
       setOnNext(() => () => router.push("/onboarding/expectation"))
-    } else {
-      setOnNext(undefined)
     }
-  }, [isComplete, hasFields, hasGoals, chatMessage, onboardingDataUpdate, setIsNextEnabled, setChatValue, setOnboardingData, setOnNext, router])
+  }, [
+    setCurrentStep, 
+    setTotalSteps, 
+    setProgress, 
+    onboardingData.mentorshipType,
+    selectedFields,
+    selectedIndustries,
+    selectedGoals,
+    onboardingDataUpdate,
+    setOnboardingData,
+    setOnNext,
+    router
+  ])
 
-  const handleFieldSelect = (fields: Option[]) => {
-    setState(prev => ({ ...prev, fields }))
+  // İlerleme durumunu takip et
+  useEffect(() => {
+    // Seçim yapılmış mı kontrol et
+    if (!hasSelection) {
+      setIsNextEnabled(false)
+      setOnNext(undefined)
+      return
+    }
+
+    // Hangi aşamada olduğumuzu kontrol et
+    if (currentQuestionStep === 1 && selectedFields.length > 0) {
+      const fieldsText = selectedFields.map(f => f.label).join(", ")
+      setChatValue(fieldsText)
+      setIsNextEnabled(true)
+      setOnNext(() => handleFieldsSubmit)
+    } 
+    else if (currentQuestionStep === 2 && selectedIndustries.length > 0) {
+      const industries = selectedIndustries.map(i => i.label).join(", ")
+      setChatValue(industries)
+      setIsNextEnabled(true)
+      setOnNext(() => handleIndustriesSubmit)
+    }
+    else if (currentQuestionStep === 3 && selectedGoals.length > 0) {
+      const goals = selectedGoals
+        .map(id => goalOptions.find(g => g.id === id)?.title)
+        .filter(Boolean)
+        .join(", ")
+      setChatValue(goals)
+      setIsNextEnabled(true)
+      setOnNext(() => handleGoalsSubmit)
+    }
+  }, [
+    hasSelection,
+    currentQuestionStep,
+    selectedFields,
+    selectedIndustries,
+    selectedGoals,
+    onboardingDataUpdate,
+    handleGoalsSubmit,
+    setChatValue,
+    setIsNextEnabled,
+    setOnNext
+  ])
+
+  const handleFieldsSelect = (fields: Option[]) => {
+    setSelectedFields(fields)
+    if (fields.length > 0) {
+      const fieldsText = fields.map(f => f.label).join(", ")
+      setChatValue(fieldsText)
+      setIsNextEnabled(true)
+      setOnNext(() => handleFieldsSubmit)
+      setHasSelection(true)
+    } else {
+      setIsNextEnabled(false)
+      setOnNext(undefined)
+      setHasSelection(false)
+    }
   }
 
-  const handleIndustrySelect = (industries: Option[]) => {
-    setState(prev => ({ ...prev, industries }))
+  const handleIndustriesSelect = (industries: Option[]) => {
+    setSelectedIndustries(industries)
+    if (industries.length > 0) {
+      const industriesText = industries.map(i => i.label).join(", ")
+      setChatValue(industriesText)
+      setIsNextEnabled(true)
+      setOnNext(() => handleIndustriesSubmit)
+      setHasSelection(true)
+    } else {
+      setIsNextEnabled(false)
+      setOnNext(undefined)
+      setHasSelection(false)
+    }
   }
 
   const handleGoalSelect = (goalId: string) => {
-    setState(prev => {
-      if (goalId === "career_development_goal_other") {
-        if (prev.isOtherGoalSelected) {
-          return {
-            ...prev,
-            goals: prev.goals.filter(g => g !== "career_development_goal_other"),
-            isOtherGoalSelected: false,
-            otherGoal: ""
-          }
-        } else if (prev.goals.length < 3) {
-          return {
-            ...prev,
-            goals: [...prev.goals, "career_development_goal_other"],
-            isOtherGoalSelected: true
-          }
-        }
-        return prev
-      }
+    const updatedGoals = selectedGoals.includes(goalId)
+      ? selectedGoals.filter(id => id !== goalId)
+      : selectedGoals.length < 3
+      ? [...selectedGoals, goalId]
+      : selectedGoals
 
-      if (prev.goals.includes(goalId)) {
-        return {
-          ...prev,
-          goals: prev.goals.filter(g => g !== goalId)
-        }
-      }
-
-      if (prev.goals.length < 3) {
-        return {
-          ...prev,
-          goals: [...prev.goals, goalId]
-        }
-      }
-
-      return prev
-    })
+    setSelectedGoals(updatedGoals)
+    
+    if (updatedGoals.length > 0) {
+      const goalsText = updatedGoals
+        .map(id => goalOptions.find(g => g.id === id)?.title)
+        .filter(Boolean)
+        .join(", ")
+      setChatValue(goalsText)
+      setIsNextEnabled(true)
+      setOnNext(() => handleGoalsSubmit)
+      setHasSelection(true)
+    } else {
+      setIsNextEnabled(false)
+      setOnNext(undefined)
+      setHasSelection(false)
+    }
   }
 
-  const handleOtherGoalChange = (value: string) => {
-    setState(prev => ({ ...prev, otherGoal: value }))
+  const handleFieldsSubmit = () => {
+    setCurrentQuestionStep(2)
+    setIsTyping(true)
+    setTimeout(() => setIsTyping(false), 1000)
+  }
+
+  const handleIndustriesSubmit = () => {
+    setCurrentQuestionStep(3)
+    setIsTyping(true)
+    setTimeout(() => setIsTyping(false), 1000)
+  }
+
+  // Önceki seçimi formatla
+  const formatPreviousChoice = (step: number): { label: string; value: string } | undefined => {
+    if (step === 1 && selectedFields.length > 0) {
+      return {
+        label: "Seçtiğin kariyer alanları",
+        value: selectedFields.map(f => f.label).join(", ")
+      }
+    }
+    if (step === 2 && selectedIndustries.length > 0) {
+      return {
+        label: "Seçtiğin sektörler",
+        value: selectedIndustries.map(i => i.label).join(", ")
+      }
+    }
+    if (step === 3 && selectedGoals.length > 0) {
+      return {
+        label: "Seçtiğin hedefler",
+        value: selectedGoals
+          .map(id => goalOptions.find(g => g.id === id)?.title)
+          .filter(Boolean)
+          .join(", ")
+      }
+    }
+    return undefined
+  }
+
+  // Lola'nın tepkileri
+  const getLolaResponse = (step: number): string => {
+    if (step === 1 && selectedFields.length > 0) {
+      return `${selectedFields.map(f => f.label).join(", ")} alanlarında deneyimli mentorlarımız var. Hangi sektörlerde çalışmak istiyorsun?`
+    }
+    if (step === 2 && selectedIndustries.length > 0) {
+      return `${selectedIndustries.map(i => i.label).join(", ")} sektörlerinde kariyer hedefin ne olacak?`
+    }
+    return "Harika! Şimdi kariyer hedeflerini belirleyelim. Ne tür bir mentorluk desteği almak istersin?"
   }
 
   return (
-    <div className="space-y-4">
-    <div>
-      <label className="block text-sm font-medium mb-2">
-        Kariyer Alanları
-      </label>
-      <MultiSelect
-        options={careerFieldOptions}
-        selected={state.fields}
-        onChange={handleFieldSelect}
-        maxSelections={3}
-      />
-    </div>
-
-    <div>
-      <label className="block text-sm font-medium mb-2">
-        Sektörler (Opsiyonel)
-      </label>
-      <MultiSelect
-        options={industryOptions}
-        selected={state.industries}
-        onChange={handleIndustrySelect}
-        maxSelections={3}
-      />
-    </div>
-
-    <div>
-      <label className="block text-sm font-medium mb-2">
-        Hedefler
-      </label>
-      <div className="grid grid-cols-1 gap-2">
-        {goalOptions.map((goal) => (
-          <button
-            key={goal.id}
-            onClick={() => handleGoalSelect(goal.id)}
-            className={cn(
-              "relative flex items-center gap-2 p-2 rounded-lg text-left text-xs sm:text-sm transition-all duration-200",
-              "border-2 border-emerald-100 dark:border-emerald-900/10",
-              "shadow-sm shadow-emerald-100/30 dark:shadow-emerald-900/10",
-              "hover:bg-emerald-50 dark:hover:bg-emerald-950/20 hover:shadow-lg hover:shadow-emerald-100/50 dark:hover:shadow-emerald-950/20",
-              state.goals.includes(goal.id)
-                ? "border-emerald-500/30 bg-emerald-50/50 dark:bg-emerald-950/20 shadow-lg shadow-emerald-100/50 dark:shadow-emerald-950/20"
-                : "hover:border-emerald-200 dark:hover:border-emerald-800/20"
-            )}
-          >
-            <span className="w-5 h-5 flex items-center justify-center flex-shrink-0">
-              {goal.icon}
-            </span>
-            <span>{goal.title}</span>
-            {state.goals.includes(goal.id) && (
-              <div className="absolute right-2">
-                <Check className="w-4 h-4 text-emerald-500" />
-              </div>
-            )}
-          </button>
-        ))}
-      </div>
-
-      {state.isOtherGoalSelected && (
-        <div className="mt-2">
-          <input
-            type="text"
-            value={state.otherGoal}
-            onChange={(e) => handleOtherGoalChange(e.target.value)}
-            placeholder="Diğer hedefini buraya yazabilirsin..."
-            className="w-full p-2 rounded-lg border-2 border-emerald-100 dark:border-emerald-900/10 text-sm"
+    <div className="space-y-6">
+      {/* Alan Seçimi */}
+      {currentQuestionStep === 1 && !isTyping && (
+        <>
+          <StepMessage
+            message="Öncelikle hangi alanlarda kariyer yapmak istediğini öğrenebilir miyim?"
+            previousChoice={formatPreviousChoice(1)}
           />
-        </div>
+          <QuestionsContainer>
+            <MultiSelect
+              options={careerFieldOptions}
+              selected={selectedFields}
+              onChange={handleFieldsSelect}
+              placeholder="Kariyer alanı seçin..."
+            />
+          </QuestionsContainer>
+        </>
+      )}
+
+      {/* Sektör Seçimi */}
+      {currentQuestionStep === 2 && !isTyping && (
+        <>
+          <StepMessage
+            message={getLolaResponse(1)}
+            previousChoice={formatPreviousChoice(1)}
+          />
+          <QuestionsContainer>
+            <MultiSelect
+              options={industryOptions}
+              selected={selectedIndustries}
+              onChange={handleIndustriesSelect}
+              placeholder="Sektör seçin..."
+            />
+          </QuestionsContainer>
+        </>
+      )}
+
+      {/* Hedef Seçimi */}
+      {currentQuestionStep === 3 && !isTyping && (
+        <>
+          <StepMessage
+            message={getLolaResponse(2)}
+            previousChoice={formatPreviousChoice(2)}
+          />
+          <QuestionsContainer>
+            <div className="space-y-4">
+              {goalOptions.map((goal) => (
+                <Button
+                  key={goal.id}
+                  onClick={() => handleGoalSelect(goal.id)}
+                  className={cn(
+                    "relative w-full justify-start gap-2 pl-8 pr-12",
+                    selectedGoals.includes(goal.id) && "bg-emerald-500 text-white hover:bg-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-500"
+                  )}
+                  variant="outline"
+                >
+                  {goal.icon}
+                  <div className="flex flex-col items-start gap-1">
+                    <div className="font-medium">{goal.title}</div>
+                    <div className="text-sm text-muted-foreground">{goal.description}</div>
+                  </div>
+                  {selectedGoals.includes(goal.id) && (
+                    <Check className="absolute right-4 h-4 w-4" />
+                  )}
+                </Button>
+              ))}
+            </div>
+          </QuestionsContainer>
+        </>
+      )}
+
+      {isTyping && (
+        <LolaMessage
+          message="Düşünüyorum..."
+        />
       )}
     </div>
-  </div>
   )
 }

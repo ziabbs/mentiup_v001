@@ -1,12 +1,10 @@
 "use client"
 
 import * as React from "react"
-import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
-import { useOnboarding } from "@/app/onboarding/layout"
+import { useOnboarding } from "@/hooks/use-onboarding"
 import { cn } from "@/lib/utils"
 import { ArrowRight } from "lucide-react"
-import ReactMarkdown from 'react-markdown'
+
 
 interface ChatInputProps {
   value: string
@@ -72,7 +70,7 @@ export function ChatInput({
         </div>
 
         {/* Input Area */}
-        <div className="relative">
+        <div className="relative flex items-center">
           <textarea
             ref={textareaRef}
             value={value}
@@ -82,7 +80,7 @@ export function ChatInput({
               adjustTextareaHeight()
             }}
             className={cn(
-              "w-full min-h-[72px] resize-none rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-400 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-800 dark:bg-gray-950 dark:placeholder:text-gray-400 dark:focus-visible:ring-gray-800",
+              "w-full min-h-[72px] resize-none rounded-xl border border-gray-200 bg-white px-3 py-2 pr-12 text-sm shadow-sm placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-400 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-800 dark:bg-gray-950 dark:placeholder:text-gray-400 dark:focus-visible:ring-gray-800",
               readOnly && "cursor-default opacity-80"
             )}
             placeholder="Mesajınızı yazın..."
@@ -90,16 +88,16 @@ export function ChatInput({
           />
           <button
             onClick={onNext}
-            disabled={!isNextEnabled && !isCompletion}
+            disabled={!(isNextEnabled || isCompletion)}
             className={cn(
-              "absolute bottom-2 right-2 inline-flex items-center justify-center rounded-lg bg-emerald-500 p-2 text-white hover:bg-emerald-600 disabled:pointer-events-none disabled:opacity-50 dark:bg-emerald-600 dark:hover:bg-emerald-500",
+              "absolute right-2 inline-flex items-center justify-center rounded-lg bg-emerald-500 p-2 text-white hover:bg-emerald-600 disabled:pointer-events-none disabled:opacity-50 dark:bg-emerald-600 dark:hover:bg-emerald-500",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 dark:focus-visible:ring-emerald-400 dark:focus-visible:ring-offset-gray-900",
               "transition-opacity duration-200"
             )}
             aria-label={buttonText}
           >
             <span className="sr-only">{buttonText}</span>
-            <ArrowRight className="h-4 w-4" />
+            <ArrowRight className="h-5 w-5" />
           </button>
         </div>
       </div>

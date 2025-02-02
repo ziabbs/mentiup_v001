@@ -1,29 +1,12 @@
 "use client"
 
 import { useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
 import { LolaMessage } from "@/components/onboarding/lola-message"
-import { useOnboarding } from "../../layout"
-import { MessageSquare, Star, Target, Briefcase } from "lucide-react"
-import { ChatInput } from "@/components/onboarding/chat-input"
-
-interface Field {
-  value: string
-  label: string
-}
+import { useOnboarding } from "@/hooks/use-onboarding"
 
 type MentorshipType = 'career-development' | 'senior-career' | 'startup' | 'senior-startup'
 
-interface OnboardingData {
-  mentorshipType: MentorshipType
-  fields?: (string | Field)[]
-  goals?: string[]
-  expectations?: string
-}
-
 export default function CompletionPage() {
-  const router = useRouter()
   const { 
     setCurrentStep, 
     setTotalSteps, 
@@ -145,13 +128,12 @@ export default function CompletionPage() {
       role="main"
       aria-label="Onboarding tamamlandı"
     >
-     
-        <div className="mb-8">
-          <LolaMessage
-            message="Harika! Her şey tamamlandı. Artık birlikte çalışmaya başlayabiliriz! 🎉"
-            subMessage="Size özel olarak hazırladığım mentorluk planını görmek için sohbete başlayabilirsiniz."
-          />
-        </div>
+      <div className="mb-8">
+        <LolaMessage
+          message="Harika! Her şey tamamlandı. Artık birlikte çalışmaya başlayabiliriz! 🎉"
+          subMessage={generatedPrompt}
+        />
+      </div>
     </main>
   )
 }

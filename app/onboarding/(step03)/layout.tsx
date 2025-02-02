@@ -2,8 +2,7 @@
 
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { useOnboarding } from "../layout"
-import { StepMessage } from "@/components/onboarding/step-message"
+import { useOnboarding } from "@/hooks/use-onboarding"
 
 export default function Step3Layout({
   children,

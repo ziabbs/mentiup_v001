@@ -79,7 +79,7 @@ export function MultiSelect({
         )}
         role="combobox"
         aria-expanded={isOpen}
-        aria-controls="multi-select-options"
+        aria-controls={`${id}-options`}
         aria-label={ariaLabel}
         aria-required={ariaRequired}
         aria-describedby={ariaDescribedby}
@@ -118,7 +118,7 @@ export function MultiSelect({
       {isOpen && (
         <div
           className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-950 rounded-lg border border-gray-200 dark:border-gray-800 shadow-lg"
-          id="multi-select-options"
+          id={`${id}-options`}
         >
           <input
             type="text"
