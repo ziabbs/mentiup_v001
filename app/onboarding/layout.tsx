@@ -2,96 +2,146 @@
 
 import { useEffect, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
-import { MeetingHeader } from "@/components/onboarding/meeting-header"
-import { ChatInput } from "@/components/onboarding/chat-input"
-import { OnboardingContext, type OnboardingData } from "@/hooks/use-onboarding"
+import { MeetingHeader } from "@/app/onboarding/flow/components/meeting-header"
+import { ChatInput } from "@/app/onboarding/flow/components/chat-input"
+import { useOnboarding } from "@/hooks/use-onboarding"
+import { useFlow } from "./flow/use-flow"
+
+const headerAndChatClasses = "bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
 
 export default function OnboardingLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const [mounted, setMounted] = useState(false)
-  const [currentStep, setCurrentStep] = useState("Adım 1")
-  const [totalSteps, setTotalSteps] = useState("/ 4")
-  const [progress, setProgress] = useState(25)
-  const [chatValue, setChatValue] = useState("")
-  const [isNextEnabled, setIsNextEnabled] = useState(false)
-  const [onNext, setOnNext] = useState<(() => void) | undefined>(undefined)
-  const [onboardingData, _setOnboardingData] = useState<OnboardingData>({
-    stepChoices: {}
-  })
+  const {
+    isNextEnabled,
+    onNext,
+    progress,
+    currentStep,
+    totalSteps,
+    chatValue,
+    setChatValue,
+    onboardingData,
+  } = useOnboarding()
+
+  const { messages } = useFlow()
   const router = useRouter()
   const pathname = usePathname()
 
-  const setOnboardingData = (data: Partial<OnboardingData>) => {
-    _setOnboardingData((prev: OnboardingData) => ({ ...prev, ...data }))
-  }
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     setMounted(true)
-    return () => setMounted(false)
   }, [])
 
-  const headerAndChatClasses = mounted ? "opacity-100 transition-opacity duration-200" : "opacity-0"
+  if (!mounted) return null
 
-  const generatedPrompt = `Merhaba Lola,\n\nMentorluk tercihlerimi aşağıdaki gibi belirledim:\n\n**Mentorluk Tipi:** ${onboardingData.mentorshipType}\n**Hedeflerim:** ${onboardingData.goals?.join(', ')}\n**İlgi Alanlarım:** ${onboardingData.fields?.map(field => typeof field === 'string' ? field : field.value).join(', ')}\n**Beklentilerim:** ${onboardingData.expectations}\n\nBu doğrultuda bana özel bir mentorluk planı oluşturmanı rica ediyorum.`;
+  // Onboarding verilerini formatlı göster
+  const formatOnboardingData = () => {
+    const data = []
+    
+    if (onboardingData.mentorshipType) {
+      data.push(`**Mentorluk Tipi:** ${onboardingData.mentorshipType}`)
+    }
+    
+    // Career Development
+    if (onboardingData.careerFields?.length) {
+      data.push(`**Kariyer Alanları:** ${onboardingData.careerFields.join(', ')}`)
+    }
+    if (onboardingData.careerIndustries?.length) {
+      data.push(`**Sektörler:** ${onboardingData.careerIndustries.join(', ')}`)
+    }
+    if (onboardingData.careerGoals?.length) {
+      data.push(`**Kariyer Hedefleri:** ${onboardingData.careerGoals.join(', ')}`)
+    }
+
+    // Senior Career
+    if (onboardingData.seniorCareerFields?.length) {
+      data.push(`**Üst Düzey Kariyer Alanları:** ${onboardingData.seniorCareerFields.join(', ')}`)
+    }
+    if (onboardingData.seniorCareerIndustries?.length) {
+      data.push(`**Üst Düzey Kariyer Sektörleri:** ${onboardingData.seniorCareerIndustries.join(', ')}`)
+    }
+    if (onboardingData.seniorCareerGoals?.length) {
+      data.push(`**Üst Düzey Kariyer Hedefleri:** ${onboardingData.seniorCareerGoals.join(', ')}`)
+    }
+
+    // Startup
+    if (onboardingData.startupFields?.length) {
+      data.push(`**Startup Alanları:** ${onboardingData.startupFields.join(', ')}`)
+    }
+    if (onboardingData.startupStages?.length) {
+      data.push(`**Startup Aşaması:** ${onboardingData.startupStages.join(', ')}`)
+    }
+    if (onboardingData.startupGoals?.length) {
+      data.push(`**Startup Hedefleri:** ${onboardingData.startupGoals.join(', ')}`)
+    }
+
+    // Senior Startup
+    if (onboardingData.seniorStartupFields?.length) {
+      data.push(`**Üst Düzey Startup Alanları:** ${onboardingData.seniorStartupFields.join(', ')}`)
+    }
+    if (onboardingData.seniorStartupStages?.length) {
+      data.push(`**Üst Düzey Startup Aşaması:** ${onboardingData.seniorStartupStages.join(', ')}`)
+    }
+    if (onboardingData.seniorStartupGoals?.length) {
+      data.push(`**Üst Düzey Startup Hedefleri:** ${onboardingData.seniorStartupGoals.join(', ')}`)
+    }
+
+    // Expectations
+    if (onboardingData.expectation) {
+      data.push(`**Beklentiler:** ${onboardingData.expectation}`)
+    }
+    
+    return `Merhaba Lola,\n\nMentorluk tercihlerimi aşağıdaki gibi belirledim:\n\n${data.join('\n\n')}\n\nBu doğrultuda bana özel bir mentorluk planı oluşturmanı rica ediyorum.`
+  }
+
+  const generatedPrompt = formatOnboardingData()
+
+  const handleNext = () => {
+    if (currentStep === 'Tamamlandı') {
+      router.push('/chat')
+    } else if (onNext) {
+      onNext()
+    }
+  }
 
   return (
-    <OnboardingContext.Provider
-      value={{
-        currentStep,
-        setCurrentStep,
-        totalSteps,
-        setTotalSteps,
-        progress,
-        setProgress,
-        chatValue,
-        setChatValue,
-        isNextEnabled,
-        setIsNextEnabled,
-        onNext,
-        setOnNext,
-        onboardingData,
-        setOnboardingData,
-      }}
-    >
-      <div className="flex flex-col min-h-[100dvh] bg-background">
-        {pathname !== '/onboarding' && (
-          <div className={`fixed top-0 left-0 right-0 z-40 ${headerAndChatClasses}`}>
-            <MeetingHeader />
-          </div>
-        )}
-        
-        <main className={`flex-1 ${pathname !== '/onboarding' ? 'pt-24 pb-[100px]' : ''} overflow-visible`}>
-          <div className="h-full relative">
-            {children}
-          </div>
-        </main>
-
-        {pathname !== '/onboarding' && (
-          <div className={`fixed bottom-0 left-0 right-0 z-40 ${headerAndChatClasses}`}>
-            <ChatInput
-              value={currentStep === 'Tamamlandı' ? generatedPrompt : chatValue}
-              isNextEnabled={isNextEnabled}
-              progress={progress}
-              onNext={currentStep === 'Tamamlandı' ? () => router.push('/chat') : onNext}
-              currentStep={currentStep}
-              totalSteps={totalSteps}
-              readOnly={currentStep === 'Tamamlandı'}
-              onChange={(e) => setChatValue(e.target.value)}
-              aria-label={currentStep === 'Tamamlandı' ? 'Mentorluk tercihleriniz' : 'Onboarding girişi'}
-            />
-          </div>
-        )}
-        <style jsx global>{`
-          @supports (-webkit-touch-callout: none) {
-            .min-h-[100dvh] {
-              min-height: -webkit-fill-available;
-            }
-          }
-        `}</style>
+    <div className="flex flex-col min-h-[100dvh] bg-background">
+      {pathname !== '/onboarding' && (
+        <div className={`fixed top-0 left-0 right-0 z-40 ${headerAndChatClasses}`}>
+          <MeetingHeader />
+        </div>
+      )}
+      
+      <div className={`flex-1 overflow-y-auto ${headerAndChatClasses}`}>
+        <div className="flex flex-col gap-4 py-8 pt-32 pb-32">
+          {children}
+        </div>
       </div>
-    </OnboardingContext.Provider>
+
+      {pathname !== '/onboarding' && (
+        <div className={`fixed bottom-0 left-0 right-0 z-40 ${headerAndChatClasses}`}>
+          <ChatInput
+            value={currentStep === 'Tamamlandı' ? generatedPrompt : messages[messages.length - 1]?.selectedOption || chatValue}
+            isNextEnabled={isNextEnabled}
+            progress={progress}
+            onNext={handleNext}
+            currentStep={currentStep}
+            totalSteps={totalSteps}
+            readOnly={currentStep === 'Tamamlandı' || Boolean(messages[messages.length - 1]?.selectedOption)}
+            onChange={(e) => setChatValue(e.target.value)}
+          />
+        </div>
+      )}
+      <style jsx global>{`
+        @supports (-webkit-touch-callout: none) {
+          .min-h-[100dvh] {
+            min-height: -webkit-fill-available;
+          }
+        }
+      `}</style>
+    </div>
   )
 }

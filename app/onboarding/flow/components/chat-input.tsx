@@ -49,7 +49,7 @@ export function ChatInput({
   }, [value])
 
   return (
-    <div className="relative p-4 bg-white">
+    <div className="relative p-4 bg-white border-t border-gray-200 dark:border-gray-800">
       <div className="flex flex-col gap-2 sm:gap-3">
         {/* Progress Bar */}
         <div className="flex items-center justify-between gap-2">

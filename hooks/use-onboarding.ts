@@ -1,45 +1,61 @@
 "use client"
 
-import { createContext, useContext } from "react"
+import { OnboardingState } from "@/app/onboarding/flow/types"
+import { create } from "zustand"
 
-interface StepChoice {
-  label: string
-  value: string
-}
-
-export interface OnboardingData {
-  mentorshipType?: string
-  fields?: { value: string; label: string }[]
-  goals?: string[]
-  expectations?: string
-  stepChoices?: {
-    [key: string]: StepChoice
-  }
-}
-
-export interface OnboardingContextType {
-  currentStep: string
-  setCurrentStep: (step: string) => void
-  totalSteps: string
-  setTotalSteps: (steps: string) => void
-  progress: number
-  setProgress: (progress: number) => void
-  chatValue: string
-  setChatValue: (value: string) => void
+interface OnboardingStore {
+  // Navigation State
   isNextEnabled: boolean
   setIsNextEnabled: (enabled: boolean) => void
   onNext?: () => void
   setOnNext: (callback: (() => void) | undefined) => void
-  onboardingData: OnboardingData
-  setOnboardingData: (data: Partial<OnboardingData>) => void
+  
+  // Progress State
+  progress: number
+  setProgress: (progress: number) => void
+  currentStep: string
+  setCurrentStep: (step: string) => void
+  totalSteps: string
+  setTotalSteps: (steps: string) => void
+  
+  // Chat State
+  chatValue: string
+  setChatValue: (value: string) => void
+  
+  // Data State
+  onboardingData: Partial<OnboardingState>
+  setOnboardingData: (data: Partial<OnboardingState>) => void
+  updateOnboardingData: (key: keyof OnboardingState, value: any) => void
 }
 
-export const OnboardingContext = createContext<OnboardingContextType | null>(null)
-
-export function useOnboarding() {
-  const context = useContext(OnboardingContext)
-  if (!context) {
-    throw new Error("useOnboarding must be used within an OnboardingProvider")
-  }
-  return context
-}
+export const useOnboarding = create<OnboardingStore>((set) => ({
+  // Navigation State
+  isNextEnabled: false,
+  setIsNextEnabled: (enabled) => set({ isNextEnabled: enabled }),
+  onNext: undefined,
+  setOnNext: (callback) => set({ onNext: callback }),
+  
+  // Progress State
+  progress: 0,
+  setProgress: (progress) => set({ progress }),
+  currentStep: "",
+  setCurrentStep: (step) => set({ currentStep: step }),
+  totalSteps: "",
+  setTotalSteps: (steps) => set({ totalSteps: steps }),
+  
+  // Chat State
+  chatValue: "",
+  setChatValue: (value) => set({ chatValue: value }),
+  
+  // Data State
+  onboardingData: {},
+  setOnboardingData: (data) => set((state) => ({
+    onboardingData: { ...state.onboardingData, ...data }
+  })),
+  updateOnboardingData: (key, value) => set((state) => ({
+    onboardingData: {
+      ...state.onboardingData,
+      [key]: value
+    }
+  }))
+}))
