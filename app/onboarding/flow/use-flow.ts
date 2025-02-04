@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { Message, OnboardingState, FlowStep, FlowSteps, Option, MentorshipType, StepId } from "./types"
+import { Message, MentorshipType, StepId } from "./types"
 import { flowSteps } from "./steps"
 import { useOnboarding } from "@/hooks/use-onboarding"
 import { useRouter } from "next/navigation"
@@ -96,58 +96,7 @@ export function useFlow() {
     }
   }, [messages.length, currentStep, setOnboardingStep, setTotalSteps, setProgress])
 
-  const addMessage = useCallback((message: Omit<Message, 'id' | 'timestamp'>) => {
-    setMessages(prev => [...prev, {
-      ...message,
-      id: Math.random().toString(36).substring(7),
-      timestamp: Date.now()
-    }])
-  }, [])
-
-  const calculateProgress = useCallback((stepId: StepId) => {
-    if (!selectedMentorType) return 25
-
-    const totalSteps = TOTAL_STEPS[selectedMentorType]
-    const currentStepNumber = (() => {
-      switch (selectedMentorType) {
-        case 'career-development':
-          switch (stepId) {
-            case 'career-development_fields': return 1
-            case 'career-development_industries': return 2
-            case 'career-development_goals': return 3
-            default: return 1
-          }
-        case 'senior-career':
-          switch (stepId) {
-            case 'senior-career_fields': return 1
-            case 'senior-career_industries': return 2
-            case 'senior-career_goals': return 3
-            default: return 1
-          }
-        case 'startup':
-          switch (stepId) {
-            case 'startup_fields': return 1
-            case 'startup_stages': return 2
-            case 'startup_goals': return 3
-            default: return 1
-          }
-        case 'senior-startup':
-          switch (stepId) {
-            case 'senior-startup_fields': return 1
-            case 'senior-startup_stages': return 2
-            case 'senior-startup_goals': return 3
-            default: return 1
-          }
-        default:
-          return 1
-      }
-    })()
-
-    return Math.round((currentStepNumber / totalSteps) * 100)
-  }, [selectedMentorType])
-
-  // Handle option selection
-  const handleOptionSelect = useCallback((optionId: string, optionTitle: string, stepId?: StepId) => {
+  const handleOptionSelect = useCallback((optionId: string, optionTitle: string, stepId: StepId) => {
     const step = flowSteps[stepId || currentStep]
     if (!step) return
 
@@ -483,8 +432,51 @@ export function useFlow() {
         setIsNextEnabled(true)
         break
     }
-  }, [currentStep, setPendingSelection, setIsNextEnabled, messages])
+  }, [currentStep, setPendingSelection, setIsNextEnabled, messages, setChatValue])
 
+  const calculateProgress = useCallback((stepId: StepId) => {
+    if (!selectedMentorType) return 25
+
+    const totalSteps = TOTAL_STEPS[selectedMentorType]
+    const currentStepNumber = (() => {
+      switch (selectedMentorType) {
+        case 'career-development':
+          switch (stepId) {
+            case 'career-development_fields': return 1
+            case 'career-development_industries': return 2
+            case 'career-development_goals': return 3
+            default: return 1
+          }
+        case 'senior-career':
+          switch (stepId) {
+            case 'senior-career_fields': return 1
+            case 'senior-career_industries': return 2
+            case 'senior-career_goals': return 3
+            default: return 1
+          }
+        case 'startup':
+          switch (stepId) {
+            case 'startup_fields': return 1
+            case 'startup_stages': return 2
+            case 'startup_goals': return 3
+            default: return 1
+          }
+        case 'senior-startup':
+          switch (stepId) {
+            case 'senior-startup_fields': return 1
+            case 'senior-startup_stages': return 2
+            case 'senior-startup_goals': return 3
+            default: return 1
+          }
+        default:
+          return 1
+      }
+    })()
+
+    return Math.round((currentStepNumber / totalSteps) * 100)
+  }, [selectedMentorType])
+
+  // Handle option selection
   const handleSubmit = useCallback(async () => {
     if (isTransitioning.current) return
     isTransitioning.current = true
@@ -694,7 +686,7 @@ export function useFlow() {
     } finally {
       isTransitioning.current = false
     }
-  }, [currentStep, pendingSelection, setPendingSelection, setIsNextEnabled, setProgress, setOnboardingStep, selectedMentorType, updateOnboardingData, router])
+  }, [currentStep, pendingSelection, setPendingSelection, setIsNextEnabled, setProgress, setOnboardingStep, selectedMentorType, updateOnboardingData, router, calculateProgress])
 
   // Cleanup on unmount
   useEffect(() => {
