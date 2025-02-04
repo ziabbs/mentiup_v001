@@ -5,12 +5,12 @@ import { useFlow } from "./use-flow"
 import { MessageBubble } from "./components/message-bubble"
 import { TypingIndicator } from "./components/typing-indicator"
 import { useOnboarding } from "@/hooks/use-onboarding"
-import { StepId } from "./types"
+
 
 export default function FlowPage() {
   // Destructure only what we need from useFlow
   const { messages, isTyping, handleOptionSelect, handleSubmit, currentStep } = useFlow()
-  const { setOnNext, setIsNextEnabled } = useOnboarding()
+  const { setOnNext } = useOnboarding()
   const chatContainerRef = useRef<HTMLDivElement>(null)
 
   // Handle next button click
