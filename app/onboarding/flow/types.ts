@@ -9,6 +9,7 @@ export interface Option {
   title: string
   description?: string
   icon?: string | React.ReactNode
+  type?: 'default' | 'custom'
 }
 
 export interface Message {

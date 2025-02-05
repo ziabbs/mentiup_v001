@@ -91,7 +91,7 @@ export function useFlow() {
       globalState.messages = [firstMessage]
 
       setOnboardingStep("Adım 1")
-      setTotalSteps("/ 3")
+      setTotalSteps("/ 4")
       setProgress(25)
     }
   }, [messages.length, currentStep, setOnboardingStep, setTotalSteps, setProgress])

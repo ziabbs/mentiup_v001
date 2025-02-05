@@ -1,17 +1,18 @@
 "use client"
 
+import * as React from "react"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Message } from "../types"
-import { Rocket, Star, Lightbulb, Target, Search } from "lucide-react"
+import { Rocket, Star, Lightbulb, Target, Search, Plus } from "lucide-react"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { Input } from "@/components/ui/input"
 
 const ICONS = {
-  rocket: <Rocket className="w-3.5 h-3.5" />,
-  star: <Star className="w-3.5 h-3.5" />,
-  lightbulb: <Lightbulb className="w-3.5 h-3.5" />,
-  target: <Target className="w-3.5 h-3.5" />
+  rocket: Rocket,
+  star: Star,
+  lightbulb: Lightbulb,
+  target: Target
 } as const
 
 interface MessageBubbleProps {
@@ -19,10 +20,35 @@ interface MessageBubbleProps {
   onOptionSelect?: (optionId: string, optionTitle: string) => void
 }
 
+interface Option {
+  id: string
+  title: string
+  type: 'default' | 'custom'
+  description?: string
+  icon?: keyof typeof ICONS
+}
+
 export function MessageBubble({ message, onOptionSelect }: MessageBubbleProps) {
   const isLola = message.type === 'lola'
   const optionsRef = useRef<HTMLDivElement>(null)
   const [searchTerm, setSearchTerm] = useState("")
+  const [localOptions, setLocalOptions] = useState<Option[]>([])
+  
+  // Options'ları güncelle
+  useEffect(() => {
+    if (message.options) {
+      // Varsayılan seçeneklere type ekle ve icon tipini dönüştür
+      const optionsWithType = message.options.map(opt => ({
+        ...opt,
+        type: 'default' as const,
+        icon: opt.icon && typeof opt.icon === 'string' ? opt.icon as keyof typeof ICONS : undefined
+      }))
+      setLocalOptions(optionsWithType)
+    } else {
+      setLocalOptions([])
+    }
+  }, [message.options])
+
   const isMultipleSelectionStep = message.id === 'career-development_fields' || 
                                  message.id === 'career-development_industries' ||
                                  message.id === 'senior-career_fields' ||
@@ -52,17 +78,33 @@ export function MessageBubble({ message, onOptionSelect }: MessageBubbleProps) {
     }
   }, [onOptionSelect])
 
-  const handleSearchKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && message.options) {
-      const option = message.options.find(opt => 
-        opt.title.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-      if (option) {
-        onOptionSelect?.(option.id, option.title)
-        setSearchTerm("")
+  const handleAddNewOption = useCallback(() => {
+    if (searchTerm.trim()) {
+      // Yeni seçenek için unique bir ID oluştur
+      const newOptionId = `custom_${Math.random().toString(36).substr(2, 9)}`
+      const newOption: Option = {
+        id: newOptionId,
+        title: searchTerm.trim(),
+        type: 'custom' as const
       }
+      
+      // Yerel seçeneklere başa ekle
+      setLocalOptions(prev => [newOption, ...(prev ?? [])])
+      
+      // Seçenek olarak ekle
+      onOptionSelect?.(newOptionId, newOption.title)
+      
+      // Search term'i temizle
+      setSearchTerm("")
     }
-  }, [searchTerm, message.options, onOptionSelect])
+  }, [searchTerm, onOptionSelect])
+
+  const handleSearchKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && searchTerm.trim()) {
+      e.preventDefault()
+      handleAddNewOption()
+    }
+  }, [searchTerm, handleAddNewOption])
 
   useEffect(() => {
     if (message.options && !message.selectedOption) {
@@ -71,10 +113,23 @@ export function MessageBubble({ message, onOptionSelect }: MessageBubbleProps) {
     }
   }, [message.options, message.selectedOption])
 
-  const filteredOptions = message.options?.filter(option =>
+  // Filtreleme işlemi localOptions üzerinden yapılıyor
+  const filteredOptions = localOptions?.filter(option =>
     option.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     option.description?.toLowerCase().includes(searchTerm.toLowerCase())
   )
+
+  // Arama ve yeni ekle özelliğinin görünürlüğünü ayarla
+  const isSearchableStep = message.id === 'career-development_fields' || 
+                          message.id === 'career-development_industries' ||
+                          message.id === 'senior-career_fields' ||
+                          message.id === 'senior-career_industries' ||
+                          message.id === 'senior-career_goals' ||
+                          message.id === 'startup_fields' ||
+                          message.id === 'senior-startup_fields'
+
+  const showSearch = isSearchableStep
+  const showAddNew = isSearchableStep && searchTerm.trim().length > 0
 
   return (
     <div 
@@ -109,17 +164,29 @@ export function MessageBubble({ message, onOptionSelect }: MessageBubbleProps) {
 
             {message.options && onOptionSelect && (
               <div className="space-y-2">
-                {isMultipleSelectionStep && (
-                  <div className="relative">
-                    <Input
-                      type="text"
-                      placeholder="Ara..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      onKeyDown={handleSearchKeyDown}
-                      className="pl-8 bg-transparent border-0 ring-1 ring-emerald-100 dark:ring-emerald-800/20 focus-visible:ring-2 focus-visible:ring-emerald-500/30"
-                    />
-                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                {showSearch && (
+                  <div className="relative flex gap-2 items-center mb-2">
+                    <div className="relative flex-1">
+                      <Input
+                        type="text"
+                        placeholder="Ara..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onKeyDown={handleSearchKeyDown}
+                        className="pl-8 bg-transparent border-0 ring-1 ring-emerald-100 dark:ring-emerald-800/20 focus-visible:ring-2 focus-visible:ring-emerald-500/30"
+                      />
+                      <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                    </div>
+                    {showAddNew && (
+                      <button
+                        onClick={handleAddNewOption}
+                        className="flex items-center gap-1.5 px-3 py-2 text-sm bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:hover:bg-emerald-800/30 rounded-md transition-colors"
+                        aria-label="Yeni seçenek ekle"
+                      >
+                        <Plus className="h-4 w-4" />
+                        <span className="hidden sm:inline">Yeni Ekle</span>
+                      </button>
+                    )}
                   </div>
                 )}
                 
@@ -140,7 +207,8 @@ export function MessageBubble({ message, onOptionSelect }: MessageBubbleProps) {
                         "hover:from-emerald-50 hover:to-emerald-100/50 dark:hover:from-emerald-900/20 dark:hover:to-emerald-800/20",
                         "focus:outline-none focus:ring-1 focus:ring-emerald-200 dark:focus:ring-emerald-700/30",
                         selectedOptions.includes(option.title) && 
-                          "from-emerald-100/80 to-emerald-50 dark:from-emerald-800/30 dark:to-emerald-900/30"
+                          "from-emerald-100/80 to-emerald-50 dark:from-emerald-800/30 dark:to-emerald-900/30",
+                        option.type === 'custom' && "border-2 border-emerald-200 dark:border-emerald-800"
                       )}
                       role="option"
                       aria-selected={selectedOptions.includes(option.title)}
@@ -148,15 +216,11 @@ export function MessageBubble({ message, onOptionSelect }: MessageBubbleProps) {
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           {option.icon && (
-                            <div 
-                              className={cn(
-                                "w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0",
-                                "bg-gradient-to-br from-emerald-100 to-emerald-50 dark:from-emerald-800/30 dark:to-emerald-900/30"
-                              )}
-                              aria-hidden="true"
-                            >
-                              {ICONS[option.icon as keyof typeof ICONS]}
-                            </div>
+                            typeof option.icon === 'string' ? 
+                              React.createElement(ICONS[option.icon as keyof typeof ICONS], {
+                                className: "h-5 w-5 text-emerald-500 dark:text-emerald-400"
+                              }) :
+                              option.icon
                           )}
                           <span className="font-medium">{option.title}</span>
                         </div>
