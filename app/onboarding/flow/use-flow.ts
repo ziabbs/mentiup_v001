@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { Message, MentorshipType, StepId } from "./types"
+import { Message, MentorshipType, StepId, OnboardingState } from "./types"
 import { flowSteps } from "./steps"
 import { useOnboarding } from "@/hooks/use-onboarding"
 import { useRouter } from "next/navigation"
@@ -22,17 +22,18 @@ const TOTAL_STEPS: Record<MentorshipType, number> = {
 } 
 
 // Hot reload sırasında state'i korumak için
-const globalState = {
-  messages: [] as Message[],
-  currentStep: 'mentorship-type' as StepId,
-  selectedMentorType: null as MentorshipType | null,
-  pendingSelection: null as PendingSelection | null,
-  careerFields: [] as string[],
-  careerIndustries: [] as string[],
-  seniorCareerFields: [] as string[],
-  seniorCareerIndustries: [] as string[],
-  startupFields: [] as string[],
-  seniorStartupFields: [] as string[]
+const globalState: OnboardingState = {
+  messages: [],
+  currentStep: 'mentorship-type',
+  selectedMentorType: null,
+  pendingSelection: null,
+  careerFields: [],
+  careerIndustries: [],
+  seniorCareerFields: [],
+  seniorCareerIndustries: [],
+  seniorCareerGoals: [],
+  startupFields: [],
+  seniorStartupFields: []
 }
 
 export function useFlow() {
@@ -78,12 +79,11 @@ export function useFlow() {
       if (!step) return
 
       const firstMessage: Message = {
-        id: step.id,
-        type: 'lola' as const,
+        id: `msg_${Math.random().toString(36).substr(2, 9)}`,
         content: step.message,
-        subContent: step.subMessage,
+        isLola: true,
         options: step.options,
-        timestamp: Date.now()
+        stepId: currentStep
       }
 
       console.log('Adding first message:', firstMessage)
@@ -96,323 +96,89 @@ export function useFlow() {
     }
   }, [messages.length, currentStep, setOnboardingStep, setTotalSteps, setProgress])
 
-  const handleOptionSelect = useCallback((optionId: string, optionTitle: string, stepId: StepId) => {
-    const step = flowSteps[stepId || currentStep]
+  const handleOptionSelect = useCallback((optionId: string, optionTitle: string, messageId: StepId, optionDescription?: string) => {
+    const step = flowSteps[messageId]
     if (!step) return
 
     // Handle multiple selections based on step
-    switch (stepId || currentStep) {
+    switch (messageId) {
       case 'career-development_fields':
-        const currentFields = (globalState.careerFields || []) as string[]
-        if (currentFields.includes(optionId)) {
-          const updated = currentFields.filter(id => id !== optionId)
-          globalState.careerFields = updated
-          setIsNextEnabled(updated.length > 0)
-          
-          // Update selected options in message
-          const updatedMessages = messages.map((msg, index) => {
-            if (index === messages.length - 1) {
-              const selectedOptions = updated.map(id => {
-                const option = flowSteps[currentStep]?.options?.find(opt => opt.id === id)
-                return option?.title
-              }).filter(Boolean)
-              return {
-                ...msg,
-                selectedOption: selectedOptions.join(', ')
-              }
-            }
-            return msg
-          })
-          setMessages(updatedMessages)
-          globalState.messages = updatedMessages
-          setChatValue(updatedMessages[updatedMessages.length - 1].selectedOption || '')
-        } else {
-          if (currentFields.length >= 3) return // Maximum 3 selections
-          const updated = [...currentFields, optionId]
-          globalState.careerFields = updated
-          setIsNextEnabled(true)
-          
-          // Update selected options in message
-          const updatedMessages = messages.map((msg, index) => {
-            if (index === messages.length - 1) {
-              const selectedOptions = updated.map(id => {
-                const option = flowSteps[currentStep]?.options?.find(opt => opt.id === id)
-                return option?.title
-              }).filter(Boolean)
-              return {
-                ...msg,
-                selectedOption: selectedOptions.join(', ')
-              }
-            }
-            return msg
-          })
-          setMessages(updatedMessages)
-          globalState.messages = updatedMessages
-          setChatValue(updatedMessages[updatedMessages.length - 1].selectedOption || '')
-        }
-        return
-
       case 'career-development_industries':
-        const currentIndustries = (globalState.careerIndustries || []) as string[]
-        if (currentIndustries.includes(optionId)) {
-          const updated = currentIndustries.filter(id => id !== optionId)
-          globalState.careerIndustries = updated
-          setIsNextEnabled(updated.length > 0)
-          
-          // Update selected options in message
-          const updatedMessages = messages.map((msg, index) => {
-            if (index === messages.length - 1) {
-              const selectedOptions = updated.map(id => {
-                const option = flowSteps[currentStep]?.options?.find(opt => opt.id === id)
-                return option?.title
-              }).filter(Boolean)
-              return {
-                ...msg,
-                selectedOption: selectedOptions.join(', ')
-              }
-            }
-            return msg
-          })
-          setMessages(updatedMessages)
-          globalState.messages = updatedMessages
-          setChatValue(updatedMessages[updatedMessages.length - 1].selectedOption || '')
-        } else {
-          if (currentIndustries.length >= 3) return // Maximum 3 selections
-          const updated = [...currentIndustries, optionId]
-          globalState.careerIndustries = updated
-          setIsNextEnabled(true)
-          
-          // Update selected options in message
-          const updatedMessages = messages.map((msg, index) => {
-            if (index === messages.length - 1) {
-              const selectedOptions = updated.map(id => {
-                const option = flowSteps[currentStep]?.options?.find(opt => opt.id === id)
-                return option?.title
-              }).filter(Boolean)
-              return {
-                ...msg,
-                selectedOption: selectedOptions.join(', ')
-              }
-            }
-            return msg
-          })
-          setMessages(updatedMessages)
-          globalState.messages = updatedMessages
-          setChatValue(updatedMessages[updatedMessages.length - 1].selectedOption || '')
-        }
-        return
-
       case 'senior-career_fields':
-        const currentSeniorFields = (globalState.seniorCareerFields || []) as string[]
-        if (currentSeniorFields.includes(optionId)) {
-          const updated = currentSeniorFields.filter(id => id !== optionId)
-          globalState.seniorCareerFields = updated
-          setIsNextEnabled(updated.length > 0)
-          
-          // Update selected options in message
-          const updatedMessages = messages.map((msg, index) => {
-            if (index === messages.length - 1) {
-              const selectedOptions = updated.map(id => {
-                const option = flowSteps[currentStep]?.options?.find(opt => opt.id === id)
-                return option?.title
-              }).filter(Boolean)
-              return {
-                ...msg,
-                selectedOption: selectedOptions.join(', ')
-              }
-            }
-            return msg
-          })
-          setMessages(updatedMessages)
-          globalState.messages = updatedMessages
-          setChatValue(updatedMessages[updatedMessages.length - 1].selectedOption || '')
-        } else {
-          if (currentSeniorFields.length >= 3) return // Maximum 3 selections
-          const updated = [...currentSeniorFields, optionId]
-          globalState.seniorCareerFields = updated
-          setIsNextEnabled(true)
-          
-          // Update selected options in message
-          const updatedMessages = messages.map((msg, index) => {
-            if (index === messages.length - 1) {
-              const selectedOptions = updated.map(id => {
-                const option = flowSteps[currentStep]?.options?.find(opt => opt.id === id)
-                return option?.title
-              }).filter(Boolean)
-              return {
-                ...msg,
-                selectedOption: selectedOptions.join(', ')
-              }
-            }
-            return msg
-          })
-          setMessages(updatedMessages)
-          globalState.messages = updatedMessages
-          setChatValue(updatedMessages[updatedMessages.length - 1].selectedOption || '')
-        }
-        return
-
       case 'senior-career_industries':
-        const currentSeniorIndustries = (globalState.seniorCareerIndustries || []) as string[]
-        if (currentSeniorIndustries.includes(optionId)) {
-          const updated = currentSeniorIndustries.filter(id => id !== optionId)
-          globalState.seniorCareerIndustries = updated
-          setIsNextEnabled(updated.length > 0)
-          
-          // Update selected options in message
-          const updatedMessages = messages.map((msg, index) => {
-            if (index === messages.length - 1) {
-              const selectedOptions = updated.map(id => {
-                const option = flowSteps[currentStep]?.options?.find(opt => opt.id === id)
-                return option?.title
-              }).filter(Boolean)
-              return {
-                ...msg,
-                selectedOption: selectedOptions.join(', ')
-              }
-            }
-            return msg
-          })
-          setMessages(updatedMessages)
-          globalState.messages = updatedMessages
-          setChatValue(updatedMessages[updatedMessages.length - 1].selectedOption || '')
-        } else {
-          if (currentSeniorIndustries.length >= 3) return // Maximum 3 selections
-          const updated = [...currentSeniorIndustries, optionId]
-          globalState.seniorCareerIndustries = updated
-          setIsNextEnabled(true)
-          
-          // Update selected options in message
-          const updatedMessages = messages.map((msg, index) => {
-            if (index === messages.length - 1) {
-              const selectedOptions = updated.map(id => {
-                const option = flowSteps[currentStep]?.options?.find(opt => opt.id === id)
-                return option?.title
-              }).filter(Boolean)
-              return {
-                ...msg,
-                selectedOption: selectedOptions.join(', ')
-              }
-            }
-            return msg
-          })
-          setMessages(updatedMessages)
-          globalState.messages = updatedMessages
-          setChatValue(updatedMessages[updatedMessages.length - 1].selectedOption || '')
-        }
-        return
-
+      case 'senior-career_goals':
       case 'startup_fields':
-        const currentStartupFields = (globalState.startupFields || []) as string[]
-        if (currentStartupFields.includes(optionId)) {
-          const updated = currentStartupFields.filter(id => id !== optionId)
-          globalState.startupFields = updated
-          setIsNextEnabled(updated.length > 0)
-          
-          // Update selected options in message
-          const updatedMessages = messages.map((msg, index) => {
-            if (index === messages.length - 1) {
-              const selectedOptions = updated.map(id => {
-                const option = flowSteps[currentStep]?.options?.find(opt => opt.id === id)
-                return option?.title
-              }).filter(Boolean)
-              return {
-                ...msg,
-                selectedOption: selectedOptions.join(', ')
-              }
-            }
-            return msg
-          })
-          setMessages(updatedMessages)
-          globalState.messages = updatedMessages
-          setChatValue(updatedMessages[updatedMessages.length - 1].selectedOption || '')
-        } else {
-          if (currentStartupFields.length >= 3) return // Maximum 3 selections
-          const updated = [...currentStartupFields, optionId]
-          globalState.startupFields = updated
-          setIsNextEnabled(true)
-          
-          // Update selected options in message
-          const updatedMessages = messages.map((msg, index) => {
-            if (index === messages.length - 1) {
-              const selectedOptions = updated.map(id => {
-                const option = flowSteps[currentStep]?.options?.find(opt => opt.id === id)
-                return option?.title
-              }).filter(Boolean)
-              return {
-                ...msg,
-                selectedOption: selectedOptions.join(', ')
-              }
-            }
-            return msg
-          })
-          setMessages(updatedMessages)
-          globalState.messages = updatedMessages
-          setChatValue(updatedMessages[updatedMessages.length - 1].selectedOption || '')
-        }
-        return
+      case 'senior-startup_fields': {
+        const stateKey = {
+          'career-development_fields': 'careerFields',
+          'career-development_industries': 'careerIndustries',
+          'senior-career_fields': 'seniorCareerFields',
+          'senior-career_industries': 'seniorCareerIndustries',
+          'senior-career_goals': 'seniorCareerGoals',
+          'startup_fields': 'startupFields',
+          'senior-startup_fields': 'seniorStartupFields'
+        }[messageId] as keyof Pick<OnboardingState, 'careerFields' | 'careerIndustries' | 'seniorCareerFields' | 'seniorCareerIndustries' | 'seniorCareerGoals' | 'startupFields' | 'seniorStartupFields'>
 
-      case 'senior-startup_fields':
-        const currentSeniorStartupFields = (globalState.seniorStartupFields || []) as string[]
-        if (currentSeniorStartupFields.includes(optionId)) {
-          const updated = currentSeniorStartupFields.filter(id => id !== optionId)
-          globalState.seniorStartupFields = updated
-          setIsNextEnabled(updated.length > 0)
-          
-          // Update selected options in message
-          const updatedMessages = messages.map((msg, index) => {
-            if (index === messages.length - 1) {
-              const selectedOptions = updated.map(id => {
-                const option = flowSteps[currentStep]?.options?.find(opt => opt.id === id)
-                return option?.title
-              }).filter(Boolean)
-              return {
-                ...msg,
-                selectedOption: selectedOptions.join(', ')
-              }
-            }
-            return msg
-          })
-          setMessages(updatedMessages)
-          globalState.messages = updatedMessages
-          setChatValue(updatedMessages[updatedMessages.length - 1].selectedOption || '')
-        } else {
-          if (currentSeniorStartupFields.length >= 3) return // Maximum 3 selections
-          const updated = [...currentSeniorStartupFields, optionId]
-          globalState.seniorStartupFields = updated
-          setIsNextEnabled(true)
-          
-          // Update selected options in message
-          const updatedMessages = messages.map((msg, index) => {
-            if (index === messages.length - 1) {
-              const selectedOptions = updated.map(id => {
-                const option = flowSteps[currentStep]?.options?.find(opt => opt.id === id)
-                return option?.title
-              }).filter(Boolean)
-              return {
-                ...msg,
-                selectedOption: selectedOptions.join(', ')
-              }
-            }
-            return msg
-          })
-          setMessages(updatedMessages)
-          globalState.messages = updatedMessages
-          setChatValue(updatedMessages[updatedMessages.length - 1].selectedOption || '')
-        }
-        return
+        const currentValues = (globalState[stateKey] || []) as string[]
+        let updated: string[]
 
+        if (currentValues.includes(optionId)) {
+          // Seçenek zaten seçili ise kaldır
+          updated = currentValues.filter(id => id !== optionId)
+        } else {
+          // Maksimum 3 seçim kontrolü
+          if (currentValues.length >= 3 && !optionId.startsWith('custom_')) return
+          
+          // Yeni seçenek ise başa ekle, değilse sona ekle
+          if (optionId.startsWith('custom_')) {
+            updated = [optionId, ...currentValues]
+          } else {
+            updated = [...currentValues, optionId]
+          }
+        }
+
+        // Global state'i güncelle
+        globalState[stateKey] = updated
+        setIsNextEnabled(updated.length > 0)
+
+        // Mesajları güncelle
+        const updatedMessages = messages.map((msg, index) => {
+          if (index === messages.length - 1) {
+            const selectedOptions = updated.map(id => {
+              // Özel seçenek ise direkt title'ı kullan
+              if (id.startsWith('custom_')) {
+                return optionTitle
+              }
+              // Varsayılan seçenek ise options'dan bul
+              const option = flowSteps[messageId]?.options?.find(opt => opt.id === id)
+              return option?.title
+            }).filter(Boolean)
+            return {
+              ...msg,
+              selectedOption: selectedOptions.join(', ')
+            }
+          }
+          return msg
+        })
+
+        setMessages(updatedMessages)
+        globalState.messages = updatedMessages
+        setChatValue(updatedMessages[updatedMessages.length - 1].selectedOption || '')
+        break
+      }
       default:
         // For single selections
         setPendingSelection({
-          stepId: stepId || currentStep,
+          stepId: messageId,
           optionId,
-          optionTitle
+          optionTitle,
+          optionDescription
         })
         globalState.pendingSelection = {
-          stepId: stepId || currentStep,
+          stepId: messageId,
           optionId,
-          optionTitle
+          optionTitle,
+          optionDescription
         }
 
         // Update message with selected option
@@ -432,7 +198,7 @@ export function useFlow() {
         setIsNextEnabled(true)
         break
     }
-  }, [currentStep, setPendingSelection, setIsNextEnabled, messages, setChatValue])
+  }, [messages, setPendingSelection, setIsNextEnabled, setChatValue])
 
   const calculateProgress = useCallback((stepId: StepId) => {
     if (!selectedMentorType) return 25
@@ -502,8 +268,8 @@ export function useFlow() {
             isTransitioning.current = false
             return
           }
-          selectedContent = globalState.careerFields.map(id => {
-            const option = step.options?.find(opt => opt.id === id)
+          selectedContent = globalState.careerFields.map((id: string) => {
+            const option = flowSteps[currentStep]?.options?.find(opt => opt.id === id)
             return option?.title
           }).filter(Boolean).join(', ')
           selectedOptionId = globalState.careerFields[0] // Use first selection for next step
@@ -515,8 +281,8 @@ export function useFlow() {
             isTransitioning.current = false
             return
           }
-          selectedContent = globalState.careerIndustries.map(id => {
-            const option = step.options?.find(opt => opt.id === id)
+          selectedContent = globalState.careerIndustries.map((id: string) => {
+            const option = flowSteps[currentStep]?.options?.find(opt => opt.id === id)
             return option?.title
           }).filter(Boolean).join(', ')
           selectedOptionId = globalState.careerIndustries[0]
@@ -528,8 +294,8 @@ export function useFlow() {
             isTransitioning.current = false
             return
           }
-          selectedContent = globalState.seniorCareerFields.map(id => {
-            const option = step.options?.find(opt => opt.id === id)
+          selectedContent = globalState.seniorCareerFields.map((id: string) => {
+            const option = flowSteps[currentStep]?.options?.find(opt => opt.id === id)
             return option?.title
           }).filter(Boolean).join(', ')
           selectedOptionId = globalState.seniorCareerFields[0]
@@ -541,8 +307,8 @@ export function useFlow() {
             isTransitioning.current = false
             return
           }
-          selectedContent = globalState.seniorCareerIndustries.map(id => {
-            const option = step.options?.find(opt => opt.id === id)
+          selectedContent = globalState.seniorCareerIndustries.map((id: string) => {
+            const option = flowSteps[currentStep]?.options?.find(opt => opt.id === id)
             return option?.title
           }).filter(Boolean).join(', ')
           selectedOptionId = globalState.seniorCareerIndustries[0]
@@ -554,8 +320,8 @@ export function useFlow() {
             isTransitioning.current = false
             return
           }
-          selectedContent = globalState.startupFields.map(id => {
-            const option = step.options?.find(opt => opt.id === id)
+          selectedContent = globalState.startupFields.map((id: string) => {
+            const option = flowSteps[currentStep]?.options?.find(opt => opt.id === id)
             return option?.title
           }).filter(Boolean).join(', ')
           selectedOptionId = globalState.startupFields[0]
@@ -567,8 +333,8 @@ export function useFlow() {
             isTransitioning.current = false
             return
           }
-          selectedContent = globalState.seniorStartupFields.map(id => {
-            const option = step.options?.find(opt => opt.id === id)
+          selectedContent = globalState.seniorStartupFields.map((id: string) => {
+            const option = flowSteps[currentStep]?.options?.find(opt => opt.id === id)
             return option?.title
           }).filter(Boolean).join(', ')
           selectedOptionId = globalState.seniorStartupFields[0]
@@ -616,10 +382,11 @@ export function useFlow() {
 
       // Add user message
       const newMessage: Message = {
-        id: Math.random().toString(36).substring(7),
-        type: 'user' as const,
+        id: `msg_${Math.random().toString(36).substr(2, 9)}`,
         content: selectedContent,
-        timestamp: Date.now()
+        isLola: false,
+        options: [],
+        stepId: currentStep
       }
       
       console.log('Adding user message:', newMessage)
@@ -667,11 +434,11 @@ export function useFlow() {
       }
 
       const nextMessage: Message = {
-        id: nextStepId,
-        type: 'lola',
+        id: `msg_${Math.random().toString(36).substr(2, 9)}`,
         content: nextStep.message,
+        isLola: true,
         options: nextStep.options,
-        timestamp: Date.now()
+        stepId: nextStepId
       }
 
       setMessages(prev => [...prev, nextMessage])
@@ -686,7 +453,7 @@ export function useFlow() {
     } finally {
       isTransitioning.current = false
     }
-  }, [currentStep, pendingSelection, setPendingSelection, setIsNextEnabled, setProgress, setOnboardingStep, selectedMentorType, updateOnboardingData, router, calculateProgress])
+  }, [currentStep, pendingSelection, setPendingSelection, setIsNextEnabled, setProgress, setOnboardingStep, selectedMentorType, updateOnboardingData, router, calculateProgress, setChatValue])
 
   // Cleanup on unmount
   useEffect(() => {

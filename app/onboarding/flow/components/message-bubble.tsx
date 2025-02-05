@@ -3,7 +3,7 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Message } from "../types"
+import { Message, Option, StepId } from "../types"
 import { Rocket, Star, Lightbulb, Target, Search, Plus } from "lucide-react"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { Input } from "@/components/ui/input"
@@ -17,19 +17,11 @@ const ICONS = {
 
 interface MessageBubbleProps {
   message: Message
-  onOptionSelect?: (optionId: string, optionTitle: string) => void
-}
-
-interface Option {
-  id: string
-  title: string
-  type: 'default' | 'custom'
-  description?: string
-  icon?: keyof typeof ICONS
+  onOptionSelect?: (optionId: string, optionTitle: string, messageId: StepId) => void
 }
 
 export function MessageBubble({ message, onOptionSelect }: MessageBubbleProps) {
-  const isLola = message.type === 'lola'
+  const isLola = message.isLola
   const optionsRef = useRef<HTMLDivElement>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [localOptions, setLocalOptions] = useState<Option[]>([])
@@ -49,13 +41,6 @@ export function MessageBubble({ message, onOptionSelect }: MessageBubbleProps) {
     }
   }, [message.options])
 
-  const isMultipleSelectionStep = message.id === 'career-development_fields' || 
-                                 message.id === 'career-development_industries' ||
-                                 message.id === 'senior-career_fields' ||
-                                 message.id === 'senior-career_industries' ||
-                                 message.id === 'startup_fields' ||
-                                 message.id === 'senior-startup_fields'
-
   const selectedOptions = message.selectedOption ? message.selectedOption.split(', ') : []
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLButtonElement>, optionId: string, optionTitle: string) => {
@@ -63,7 +48,7 @@ export function MessageBubble({ message, onOptionSelect }: MessageBubbleProps) {
       case 'Enter':
       case ' ':
         e.preventDefault()
-        onOptionSelect?.(optionId, optionTitle)
+        onOptionSelect?.(optionId, optionTitle, message.stepId)
         break
       case 'ArrowDown':
         e.preventDefault()
@@ -76,7 +61,7 @@ export function MessageBubble({ message, onOptionSelect }: MessageBubbleProps) {
         prevButton?.focus()
         break
     }
-  }, [onOptionSelect])
+  }, [onOptionSelect, message.stepId])
 
   const handleAddNewOption = useCallback(() => {
     if (searchTerm.trim()) {
@@ -91,13 +76,13 @@ export function MessageBubble({ message, onOptionSelect }: MessageBubbleProps) {
       // Yerel seçeneklere başa ekle
       setLocalOptions(prev => [newOption, ...(prev ?? [])])
       
-      // Seçenek olarak ekle
-      onOptionSelect?.(newOptionId, newOption.title)
+      // Seçenek olarak ekle ve seç
+      onOptionSelect?.(newOptionId, newOption.title, message.stepId)
       
       // Search term'i temizle
       setSearchTerm("")
     }
-  }, [searchTerm, onOptionSelect])
+  }, [searchTerm, onOptionSelect, message.stepId])
 
   const handleSearchKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && searchTerm.trim()) {
@@ -120,13 +105,13 @@ export function MessageBubble({ message, onOptionSelect }: MessageBubbleProps) {
   )
 
   // Arama ve yeni ekle özelliğinin görünürlüğünü ayarla
-  const isSearchableStep = message.id === 'career-development_fields' || 
-                          message.id === 'career-development_industries' ||
-                          message.id === 'senior-career_fields' ||
-                          message.id === 'senior-career_industries' ||
-                          message.id === 'senior-career_goals' ||
-                          message.id === 'startup_fields' ||
-                          message.id === 'senior-startup_fields'
+  const isSearchableStep = message.stepId === 'career-development_fields' || 
+                          message.stepId === 'career-development_industries' ||
+                          message.stepId === 'senior-career_fields' ||
+                          message.stepId === 'senior-career_industries' ||
+                          message.stepId === 'senior-career_goals' ||
+                          message.stepId === 'startup_fields' ||
+                          message.stepId === 'senior-startup_fields'
 
   const showSearch = isSearchableStep
   const showAddNew = isSearchableStep && searchTerm.trim().length > 0
@@ -158,8 +143,8 @@ export function MessageBubble({ message, onOptionSelect }: MessageBubbleProps) {
         )}>
           <div className="space-y-2">
             <p className="text-sm">{message.content}</p>
-            {message.subContent && (
-              <p className="text-xs text-muted-foreground">{message.subContent}</p>
+            {message.content && (
+              <p className="text-xs text-muted-foreground">{message.content}</p>
             )}
 
             {message.options && onOptionSelect && (
@@ -199,7 +184,7 @@ export function MessageBubble({ message, onOptionSelect }: MessageBubbleProps) {
                   {filteredOptions?.map(option => (
                     <button
                       key={option.id}
-                      onClick={() => onOptionSelect(option.id, option.title)}
+                      onClick={() => onOptionSelect(option.id, option.title, message.stepId)}
                       onKeyDown={(e) => handleKeyDown(e, option.id, option.title)}
                       className={cn(
                         "relative flex items-start gap-2 p-3 rounded-xl text-left text-xs sm:text-sm transition-all duration-300",

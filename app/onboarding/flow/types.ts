@@ -14,30 +14,39 @@ export interface Option {
 
 export interface Message {
   id: string
-  type: 'user' | 'lola'
   content: string
-  subContent?: string
-  options?: Option[]
+  isLola: boolean
   selectedOption?: string
-  timestamp: number
+  options?: Option[]
+  stepId: StepId
+}
+
+export interface PendingSelection {
+  stepId: StepId
+  optionId: string
+  optionTitle: string
+  optionDescription?: string
 }
 
 export interface OnboardingState {
+  messages: Message[]
+  currentStep: StepId
+  selectedMentorType: MentorshipType | null
+  pendingSelection: PendingSelection | null
+  careerFields: string[]
+  careerIndustries: string[]
+  seniorCareerFields: string[]
+  seniorCareerIndustries: string[]
+  seniorCareerGoals: string[]
+  startupFields: string[]
+  seniorStartupFields: string[]
   mentorshipType?: MentorshipType
   // Career Development
-  careerFields?: string[]
-  careerIndustries?: string[]
   careerGoals?: string[]
   // Senior Career
-  seniorCareerFields?: string[]
-  seniorCareerIndustries?: string[]
-  seniorCareerGoals?: string[]
-  // Startup
-  startupFields?: string[]
+  // Senior Startup
   startupStages?: string[]
   startupGoals?: string[]
-  // Senior Startup
-  seniorStartupFields?: string[]
   seniorStartupStages?: string[]
   seniorStartupGoals?: string[]
   // Final Steps
